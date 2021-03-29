@@ -2,7 +2,7 @@ package io.opencaesar.graph
 
 import scala.collection.immutable._
 
-extension[V : Ordering](g: DiGraph[V]):
+extension[V : Ordering](g: DiGraph[V])
 
   /**
    * Reachability index

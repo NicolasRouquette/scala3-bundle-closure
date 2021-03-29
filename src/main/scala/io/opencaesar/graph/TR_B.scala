@@ -20,7 +20,7 @@ object TR_B:
    * @return a new graph whose edges are not redundant and whose reachability index is equivalent to that of g.
    */
   def transitiveReduction[V:Ordering](g:DiGraph[V]):DiGraph[V]=
-    given ri as SortedMap[V,SortedSet[V]]=g.ri()
+    given ri: SortedMap[V,SortedSet[V]]=g.ri()
     val es=g.sortEdges
     val gr=es.foldLeft(g) {
       case(gi:DiGraph[V],(x,y))=>
@@ -33,7 +33,7 @@ object TR_B:
     assert(gr.sortEdges.forall(!gr.isRedundant(_,_)))
     gr
 
-  extension[V:Ordering](g:DiGraph[V]):
+  extension[V:Ordering](g:DiGraph[V])
 
     /**
      * sortEdges returns an a-priori sorting of all edges in g.
