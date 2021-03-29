@@ -15,8 +15,8 @@ import scala.collection.immutable.{SortedMap,SortedSet}
 case class DiGraph[V : Ordering]
 (vs: SortedSet[V],
  es: SortedSet[(V, V)],
- inNeighbors: SortedMap[V, SortedSet[V]],
- outNeighbors: SortedMap[V, SortedSet[V]]):
+ private val inNeighbors: SortedMap[V, SortedSet[V]],
+ private val outNeighbors: SortedMap[V, SortedSet[V]]):
     require(DiGraph.hasAllVertices(vs, es.map(_._1).toSet))
     require(DiGraph.hasAllVertices(vs, es.map(_._2).toSet))
     require(DiGraph.hasAllVertices(vs, inNeighbors.keySet))
@@ -74,6 +74,9 @@ case class DiGraph[V : Ordering]
     /**
      * Query the in neighbors of a target node 
      * 
+     * Taxonomy.parentsOf
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L69
+     * 
      * @param v target node
      * @return all the source nodes for which there is an edge to the target node
      */
@@ -83,6 +86,9 @@ case class DiGraph[V : Ordering]
 
     /**
      * Query the neighbors of a source node
+     * 
+     * Taxonomy.childrenOf
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L54
      * 
      * @param v source node
      * @return all the target nodes for which there is an edge from the source node
