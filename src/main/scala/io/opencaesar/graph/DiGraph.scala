@@ -15,8 +15,8 @@ import scala.collection.immutable.{SortedMap,SortedSet}
 case class DiGraph[V : Ordering]
 (vs: SortedSet[V],
  es: SortedSet[(V, V)],
- private val inNeighbors: SortedMap[V, SortedSet[V]],
- private val outNeighbors: SortedMap[V, SortedSet[V]]):
+ inNeighbors: SortedMap[V, SortedSet[V]],
+ outNeighbors: SortedMap[V, SortedSet[V]]):
     require(DiGraph.hasAllVertices(vs, es.map(_._1).toSet))
     require(DiGraph.hasAllVertices(vs, es.map(_._2).toSet))
     require(DiGraph.hasAllVertices(vs, inNeighbors.keySet))
@@ -51,8 +51,8 @@ case class DiGraph[V : Ordering]
         es = g1.es + (x -> y),
         inNeighbors = g1.inNeighbors.updated(y, g1.in(y) + x),
         outNeighbors = g1.outNeighbors.updated(x, g1.out(x) + y))
-      require(g2.in(y).contains(x))
-      require(g2.out(x).contains(y))
+      assert(g2.in(y).contains(x))
+      assert(g2.out(x).contains(y))
       g2
 
     /**
@@ -82,7 +82,9 @@ case class DiGraph[V : Ordering]
      */
     def in(v: V): SortedSet[V] =
       require(vs.contains(v))
-      inNeighbors.getOrElse(v, SortedSet.empty[V])
+      val result = inNeighbors.getOrElse(v, SortedSet.empty[V])
+      assert(result.forall(vs.contains))
+      result
 
     /**
      * Query the neighbors of a source node
@@ -95,7 +97,57 @@ case class DiGraph[V : Ordering]
      */
     def out(v: V): SortedSet[V] =
       require(vs.contains(v))
-      outNeighbors.getOrElse(v, SortedSet.empty[V])
+      val result = outNeighbors.getOrElse(v, SortedSet.empty[V])
+      assert(result.forall(vs.contains))
+      result
+
+    def reverse(): DiGraph[V] =
+      val r1 = vs.foldLeft(DiGraph.empty)(_.addVertex(_))
+      val r2 = es.foldLeft(r1){ case (ri, (x,y)) =>
+        ri.addEdge(y,x)
+      }
+      assert(r2.vs == vs)
+      assert(r2.es.forall{ case (y,x) => es.contains((x,y))})
+      r2
+
+    /**
+     * Taxonomy.rootAt
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L139
+     */
+    def rootAt(root: V): DiGraph[V] =
+      require(!vs.contains(root))
+      val g =  vs.filter(v => in(v).isEmpty).foldLeft(addVertex(root))(_.addEdge(root, _))
+      assert(g.vs.size == 1 + vs.size)
+      g
+
+    /**
+     * Taxonomy.exciseVertex
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L94
+     */
+    def exciseVertex(v: V): DiGraph[V] =
+      require(vs.contains(v))
+      // copy all vertices except v
+      val g1 = (vs - v).foldLeft(DiGraph.empty)(_.addVertex(_))
+      // remember children of v, parents of v and copy all edges not involving v
+      val (children: SortedSet[V], parents: SortedSet[V], g2) = 
+      es.foldLeft((SortedSet.empty[V], SortedSet.empty[V], g1)) {
+        case ((ci, pi, gi), (s, t)) =>
+          if s == v then
+            (ci + t, pi, gi)
+          else if t == v then
+            (ci, pi + s, gi)
+          else
+            (ci, pi, gi.addEdge(s,t))
+      }
+      // add edges from parents to children
+      val result = parents.foldLeft(g2) { (gi, p) =>
+        children.foldLeft(gi) { (gj, c) =>
+          gj.addEdge(p,c)
+        }
+      }
+      assert(!result.vs.contains(v))
+      assert(result.es.forall((s,t) => s != v && s != t))
+      result
 
 object DiGraph:
 
