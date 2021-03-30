@@ -100,3 +100,33 @@ extension[V : Ordering](g: DiGraph[V])
   def multiParentChild(): Option[V] =
     dfs().find(v => directParentsOf(v).size > 1)
 
+  /**
+   * Taxonomy.bypassParent
+   * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L162
+   * A new graph with the edge from parent to child removed and new edges from the direct grandparents to the child added.
+   */
+  def bypassParent(child: V, parent: V): DiGraph[V] =
+    require(g.vs.contains(child))
+    require(g.vs.contains(parent))
+    // copy all vertices except bypassed parent
+    val g1 = (g.vs - parent).foldLeft(DiGraph.empty)(_.addVertex(_))
+    // copy all edges except from parent to child
+    val g2 = (g.es - (parent -> child)).foldLeft(g1)(_.addEdge.tupled(_))
+    // add edges from direct grandparents to child
+    val g3 = directParentsOf(parent).foldLeft(g2)(_.addEdge(_,child))
+    assert(!g3.vs.contains(parent))
+    assert(g3.vs.contains(child))
+    g3
+
+  /**
+   * Taxonomy.bypassParents
+   * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L189
+   */
+  def bypassParents(child: V, parents: Set[V]): DiGraph[V] =
+    require(g.vs.contains(child))
+    require(parents.forall(g.vs.contains))
+    if parents.isEmpty then
+      g
+    else
+      val (first, rest) = (parents.head, parents.tail)
+      bypassParent(child, first).bypassParents(child, rest)

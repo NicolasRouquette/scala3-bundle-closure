@@ -149,6 +149,32 @@ case class DiGraph[V : Ordering]
       assert(result.es.forall((s,t) => s != v && s != t))
       result
 
+    /**
+     * Taxonomy.exciseVertices
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L125
+     */
+    def exciseVertices(s: Set[V]): DiGraph[V] =
+      require(s.forall(vs.contains))
+      if s.isEmpty then
+        this
+      else
+        val (first, rest) = (s.head, s.tail)
+        exciseVertex(first).exciseVertices(rest)
+
+    /**
+     * Taxonomy.exciseVerticesIf
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L135
+     */
+    def exciseVerticesIf(pred: V => Boolean): DiGraph[V] =
+      exciseVertices(vs.filter(pred))
+
+    /**
+     * Taxonomy.transitiveReduction
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L149
+     */
+    def transitiveReduction(): DiGraph[V] =
+      TR_B.transitiveReduction(this)
+      
 object DiGraph:
 
   /**
