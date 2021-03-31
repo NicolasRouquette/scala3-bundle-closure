@@ -28,7 +28,9 @@ class Test1 {
       .addEdge("z", "z")
     
     assertEquals(g2.es.size, 8)
-    
+
+    import DFS.dfs
+
     val topo = g2.dfs()
     println(topo)
   }

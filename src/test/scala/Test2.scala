@@ -28,6 +28,8 @@ class Test2 {
       .addEdge("tie", "jacket")
       .addEdge("socks", "shoes")
     
+    import DFS.dfs
+
     val topo = g2.dfs()
     println(topo)
     

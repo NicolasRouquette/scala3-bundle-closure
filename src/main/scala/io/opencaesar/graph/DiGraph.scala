@@ -174,7 +174,20 @@ case class DiGraph[V : Ordering]
      */
     def transitiveReduction(): DiGraph[V] =
       TR_B.transitiveReduction(this)
-      
+
+    /**
+     * Taxonomy.siblingMap
+     * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L303
+     */
+    def siblingMap(): SortedMap[V, SortedSet[V]] =
+      vs.foldLeft(SortedMap.empty[V, SortedSet[V]]) { case (m, p) =>
+        val siblings = es.filter(_._1 == p).map(_._2)
+        if siblings.size > 1 then
+          m.updated(p, siblings)
+        else
+          m
+      }
+
 object DiGraph:
 
   /**
