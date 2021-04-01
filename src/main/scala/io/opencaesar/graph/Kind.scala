@@ -1,4 +1,4 @@
 package io.opencaesar.graph
 
 enum Kind:
-  case Tree, Back, ForwardOrCross
+  case Tree, Back, Forward, Cross

@@ -111,12 +111,18 @@ case class DiGraph[V : Ordering]
       r2
 
     /**
+      * roots
+      */
+    def roots(): SortedSet[V] =
+      vs.filter(v => in(v).isEmpty)
+
+    /**
      * Taxonomy.rootAt
      * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L139
      */
     def rootAt(root: V): DiGraph[V] =
       require(!vs.contains(root))
-      val g =  vs.filter(v => in(v).isEmpty).foldLeft(addVertex(root))(_.addEdge(root, _))
+      val g = roots().foldLeft(addVertex(root))(_.addEdge(root, _))
       assert(g.vs.size == 1 + vs.size)
       g
 
