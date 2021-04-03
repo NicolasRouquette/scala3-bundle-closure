@@ -26,7 +26,6 @@ object DFS:
 
   extension[V : Ordering](g: DiGraph[V])
 
-
     /**
      * Depth-first search for all vertices.
      * 
@@ -199,13 +198,13 @@ object DFS:
      * Taxonomy.isolateChildFromOne
      * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L232
      */
-    def isolateChildFromOne(child: V, parent: V)(using ops: Difference[V]): DiGraph[V] =
+    def isolateChildFromOne(child: V, parent: V)(using ops: HasDifference[V]): DiGraph[V] =
       require(g.vs.contains(child))
       require(g.vs.contains(parent))
       if g.in(parent).isEmpty then
         g
       else
-        val diff = ops.difference(parent, child)
+        val diff = parent.difference(child)
         val g1 = (g.vs - parent + diff).foldLeft(DiGraph.empty)(_.addVertex(_))
         val g2 = g.es.foldLeft(g1) { case (gi, (s,t)) =>
           if s == parent then
@@ -224,7 +223,7 @@ object DFS:
      * Taxonomy.isolateChild
      * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L268
      */
-    def isolateChild(child: V, parents: Set[V])(using ops: Difference[V]): DiGraph[V] =
+    def isolateChild(child: V, parents: Set[V])(using ops: HasDifference[V]): DiGraph[V] =
       require(g.vs.contains(child))
       require(parents.forall(g.vs.contains))
       if parents.isEmpty then
@@ -237,7 +236,7 @@ object DFS:
      * Taxonomy.treeify
      * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L283
      */
-    def treeify()(using ops: Difference[V]): DiGraph[V] =
+    def treeify()(using ops: HasDifference[V]): DiGraph[V] =
       multiParentChild().fold(g) { child =>
         val parents = g.in(child)
         val bp = bypassParents(child, parents)
@@ -246,20 +245,37 @@ object DFS:
         t
       }
 
+    def isConnected(): Boolean =
+      val r = g.roots()
+      r.size == 1
+
     def ensureConnected(): Unit =
       val r = g.roots()
-      if r.size > 1 then
-        throw new IllegalArgumentException(s"A single connected graph should have only one root vertex instead of ${r.size}.")
-      
+      if  r.size > 1 then
+        throw UnconnectedTaxonomyException(s"A single connected graph should have only one root vertex instead of ${r.size}.")
+
+    def isTree(): Boolean =
+      val r = g.roots()
+      r.size match
+        case 1 =>
+          val r0 = r.head
+          val s: DFS[V] = dfs(r0)
+          val nonTree = s.kind.filter(_._2 != Kind.Tree)
+          nonTree.isEmpty
+
+        case _ =>
+          false
+
+
     def ensureTree(): Unit = 
       val r = g.roots()
       if r.size != 1 then
-        throw new IllegalArgumentException(s"A tree should have a single single root vertex instead of ${r.size}.")
+        throw InvalidTreeException(s"A tree should have a single single root vertex instead of ${r.size}.")
       else
         val r0 = r.head
         val s: DFS[V] = dfs(r0)
         val nonTree = s.kind.filter(_._2 != Kind.Tree)
         if nonTree.nonEmpty then
-          throw new IllegalArgumentException(s"The graph is not a tree because there are ${nonTree.size} non-tree edges starting from the root $r0")
+          throw InvalidTreeException(s"The graph is not a tree because there are ${nonTree.size} non-tree edges starting from the root $r0")
         
       

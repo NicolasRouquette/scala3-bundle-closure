@@ -1,7 +1,5 @@
 package io.opencaesar.graph
 
-trait Difference[V] {
+trait HasDifference[V]:
 
-  def difference(a: V, b: V): V
-  
-}
+  extension (x: V) def difference(y: V): V
