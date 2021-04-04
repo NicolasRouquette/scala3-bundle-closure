@@ -49,10 +49,10 @@ case class DiGraph[V : Ordering]
       val g1 = addVertex(x).addVertex(y)
       val g2 = g1.copy(
         es = g1.es + (x -> y),
-        inNeighbors = g1.inNeighbors.updated(y, g1.in(y) + x),
-        outNeighbors = g1.outNeighbors.updated(x, g1.out(x) + y))
-      assert(g2.in(y).contains(x))
-      assert(g2.out(x).contains(y))
+        inNeighbors = g1.inNeighbors.updated(y, g1.parentsOf(y) + x),
+        outNeighbors = g1.outNeighbors.updated(x, g1.childrenOf(x) + y))
+      assert(g2.parentsOf(y).contains(x))
+      assert(g2.childrenOf(x).contains(y))
       g2
 
     /**
@@ -66,8 +66,8 @@ case class DiGraph[V : Ordering]
       if es.contains((x,y)) then
         copy(
           es = es - (x->y),
-          inNeighbors = inNeighbors.updated(y, in(y) - x),
-          outNeighbors = outNeighbors.updated(x, out(x) - y))
+          inNeighbors = inNeighbors.updated(y, parentsOf(y) - x),
+          outNeighbors = outNeighbors.updated(x, childrenOf(x) - y))
       else
         this
 
@@ -80,7 +80,7 @@ case class DiGraph[V : Ordering]
      * @param v target node
      * @return all the source nodes for which there is an edge to the target node
      */
-    def in(v: V): SortedSet[V] =
+    def parentsOf(v: V): SortedSet[V] =
       require(vs.contains(v))
       val result = inNeighbors.getOrElse(v, SortedSet.empty[V])
       assert(result.forall(vs.contains))
@@ -95,7 +95,7 @@ case class DiGraph[V : Ordering]
      * @param v source node
      * @return all the target nodes for which there is an edge from the source node
      */
-    def out(v: V): SortedSet[V] =
+    def childrenOf(v: V): SortedSet[V] =
       require(vs.contains(v))
       val result = outNeighbors.getOrElse(v, SortedSet.empty[V])
       assert(result.forall(vs.contains))
@@ -114,7 +114,7 @@ case class DiGraph[V : Ordering]
       * roots
       */
     def roots(): SortedSet[V] =
-      vs.filter(v => in(v).isEmpty)
+      vs.filter(v => parentsOf(v).isEmpty)
 
     /**
      * Taxonomy.rootAt

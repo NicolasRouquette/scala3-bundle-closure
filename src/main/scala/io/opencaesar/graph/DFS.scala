@@ -55,7 +55,7 @@ object DFS:
 
         case Some((u, _)) =>
           val update = state.copy(colors = state.colors.updated(u, Color.Gray))
-          val next = dfsVisit(u, g.out(u), update)
+          val next = dfsVisit(u, g.childrenOf(u), update)
           dfs(next)
 
     private def dfsVisit(u: V, vs: SortedSet[V], s0: DFS[V]): DFS[V] =
@@ -82,12 +82,12 @@ object DFS:
           topo = u +: s1.topo)
       else
         val (v, vt) = (vs.head, vs.tail)
-        s1.colors.getOrElse(v, Color.White) match {
+        s1.colors.getOrElse(v, Color.White) match
           case Color.White =>
             val s2 = s1.copy(
               colors = s1.colors.updated(v, Color.Gray),
               kind =  s1.kind.updated((u,v), Kind.Tree))
-            val s3 = dfsVisit(v, g.out(v), s2)
+            val s3 = dfsVisit(v, g.childrenOf(v), s2)
             dfsVisit(u, vt, s3)
           case Color.Gray =>
             val s2 = s1.copy(kind = s1.kind.updated((u,v), Kind.Back))
@@ -97,7 +97,6 @@ object DFS:
             val vd = s1.d.getOrElse(v, 0)
             val s2 = s1.copy(kind = s1.kind.updated((u,v), if ud < vd then Kind.Forward else Kind.Cross))
             dfsVisit(u, vt, s2)
-        }
     
     /**
      * Taxonomy.descendantsOf
@@ -113,10 +112,10 @@ object DFS:
      */
     def directChildrenOf(v: V): SortedSet[V] =
       require(g.vs.contains(v))
-      val c: SortedSet[V] = g.out(v)
+      val c: SortedSet[V] = g.childrenOf(v)
       val cd: SortedSet[V] = c.flatMap(descendantsOf)
       val result = c -- cd - v
-      assert(result.forall(w => g.out(v).contains(w)))
+      assert(result.forall(w => g.childrenOf(v).contains(w)))
       result
 
     /**
@@ -134,10 +133,10 @@ object DFS:
      */
     def directParentsOf(v: V): SortedSet[V] =
       require(g.vs.contains(v))
-      val p: SortedSet[V] = g.in(v)
+      val p: SortedSet[V] = g.parentsOf(v)
       val ap: SortedSet[V] = p.flatMap(ancestorsOf)
       val result = p -- ap - v
-      assert(result.forall(w => g.in(v).contains(w)))
+      assert(result.forall(w => g.parentsOf(v).contains(w)))
       result
 
     /**
@@ -201,7 +200,7 @@ object DFS:
     def isolateChildFromOne(child: V, parent: V)(using ops: HasDifference[V]): DiGraph[V] =
       require(g.vs.contains(child))
       require(g.vs.contains(parent))
-      if g.in(parent).isEmpty then
+      if g.parentsOf(parent).isEmpty then
         g
       else
         val diff = parent.difference(child)
@@ -238,7 +237,7 @@ object DFS:
      */
     def treeify()(using ops: HasDifference[V]): DiGraph[V] =
       multiParentChild().fold(g) { child =>
-        val parents = g.in(child)
+        val parents = g.parentsOf(child)
         val bp = bypassParents(child, parents)
         val rd = bp.reduceChild(child)
         val t = rd.isolateChild(child, parents).treeify()

@@ -20,7 +20,7 @@ extension[V : Ordering](g: DiGraph[V])
   def ri(): SortedMap[V, SortedSet[V]] =
     val colors: SortedMap[V, Color] = SortedMap.empty[V, Color] ++ g.vs.toSet.map(v => v -> Color.White)
     val index = SortedMap.empty[V, SortedSet[V]] ++ 
-      g.vs.toSet.map(v => v -> ri(g.out(v), colors.updated(v, Color.Gray), SortedSet.empty[V]))
+      g.vs.toSet.map(v => v -> ri(g.childrenOf(v), colors.updated(v, Color.Gray), SortedSet.empty[V]))
     index
 
   private def ri(vs: SortedSet[V], colors: SortedMap[V, Color], acc: SortedSet[V]): SortedSet[V] =
@@ -29,6 +29,6 @@ extension[V : Ordering](g: DiGraph[V])
     else
       val (v, vt) = (vs.head, vs.tail)
       if colors.getOrElse(v, Color.Black) == Color.White then
-        ri(vt ++ g.out(v), colors.updated(v, Color.Gray), acc + v)
+        ri(vt ++ g.childrenOf(v), colors.updated(v, Color.Gray), acc + v)
       else
         ri(vt, colors, acc)

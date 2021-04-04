@@ -48,7 +48,7 @@ object TR_B:
      */
     def sortEdges:Seq[(V,V)]=
       g.vs.foldLeft[Seq[(V,V)]](Seq.empty[(V,V)]) { case (acc1: Seq[(V,V)], u: V) =>
-        g.out(u).foldLeft[Seq[(V,V)]](acc1) { case (acc2: Seq[(V,V)], v: V) =>
+        g.childrenOf(u).foldLeft[Seq[(V,V)]](acc1) { case (acc2: Seq[(V,V)], v: V) =>
           if !acc2.contains((u,v)) then
             acc2 :+ (u,v)
           else
@@ -71,4 +71,4 @@ object TR_B:
      * @return true if u has a neighbor node w != v such that ri(w,v)
      */
     def isRedundant(u:V,v:V)(using ri:SortedMap[V,SortedSet[V]]):Boolean= 
-      g.out(u).exists(w=>w!=v&&ri.getOrElse(w,SortedSet.empty[V]).contains(v))
+      g.childrenOf(u).exists(w=>w!=v&&ri.getOrElse(w,SortedSet.empty[V]).contains(v))

@@ -5,7 +5,7 @@ import scala.collection.immutable.SortedSet
 import org.junit.Assert.*
 import org.junit.{Before,Test} 
 
-object TestDifference:
+class TestDifference:
 
   val sa1 = Singleton("a")
   val sa2 = Singleton("a")

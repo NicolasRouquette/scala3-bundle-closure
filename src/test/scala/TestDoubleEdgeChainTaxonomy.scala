@@ -6,7 +6,7 @@ import scala.collection.immutable.SortedSet
 import org.junit.Assert.*
 import org.junit.Test
 
-object TestDoubleEdgeChainTaxonomy:
+class TestDoubleEdgeChainTaxonomy:
 
   val a = Singleton("a")
   val b = Singleton("b")
@@ -54,9 +54,9 @@ object TestDoubleEdgeChainTaxonomy:
 
   @Test
   def testChildrenOf(): Unit =
-    assertEquals(setB, taxonomyABC.out(a))
-    assertEquals(setC, taxonomyABC.out(b))
-    assertTrue(taxonomyABC.out(c).isEmpty)
+    assertEquals(setB, taxonomyABC.childrenOf(a))
+    assertEquals(setC, taxonomyABC.childrenOf(b))
+    assertTrue(taxonomyABC.childrenOf(c).isEmpty)
 
   @Test
   def testDirectChildrenOf(): Unit =
@@ -72,9 +72,9 @@ object TestDoubleEdgeChainTaxonomy:
 
   @Test
   def testParentsOf(): Unit =
-    assertTrue(taxonomyABC.in(a).isEmpty)
-    assertEquals(setA, taxonomyABC.in(b))
-    assertEquals(setB, taxonomyABC.in(c))
+    assertTrue(taxonomyABC.parentsOf(a).isEmpty)
+    assertEquals(setA, taxonomyABC.parentsOf(b))
+    assertEquals(setB, taxonomyABC.parentsOf(c))
 
   @Test
   def testDirectParentsOf(): Unit =

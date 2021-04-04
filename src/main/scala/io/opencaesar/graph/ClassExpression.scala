@@ -15,36 +15,33 @@ sealed trait ClassExpression[O : Ordering] extends Ordered[ClassExpression[O]]:
     if this == e then
       Empty[O]()
     else
-      e match {
+      e match
         case _: Empty[O] =>
           this
         case _: Universal[O] =>
           Empty[O]()
         case _ =>
-          Difference[O](this, e)     
-      }
+          Difference[O](this, e)
 
   def intersection(e: ClassExpression[O]): ClassExpression[O] =
     if this == e then
       this
     else
-      e match {
+      e match
         case _ @ ( _: Empty[O] | _: Intersection[O] | _: Universal[O] ) =>
           e.intersection(this)
         case _ =>
-          Intersection[O](SortedSet[ClassExpression[O]](this, e))     
-      }
+          Intersection[O](SortedSet[ClassExpression[O]](this, e))
 
   def union(e: ClassExpression[O]): ClassExpression[O] =
     if this == e then
       this
     else
-      e match {
+      e match
         case _ @ ( _: Empty[O] | _: Union[O] | _: Universal[O] ) =>
           e.union(this)
         case _ =>
-          Union[O](SortedSet[ClassExpression[O]](this, e))     
-      }
+          Union[O](SortedSet[ClassExpression[O]](this, e))
 
   def toAtom(): String = "(" + toString() + ")"
 
@@ -71,12 +68,11 @@ object ClassExpression:
     override def toString(): String = "U"
 
     override def compare(that: ClassExpression[O]): Int =
-      that match {
+      that match
         case _: Universal[O] =>
           0
         case _ =>
           1
-      }
 
   case class Empty[O : Ordering]() extends ClassExpression[O]:
 
@@ -97,12 +93,11 @@ object ClassExpression:
     override def toString(): String = "∅"
 
     override def compare(that: ClassExpression[O]): Int =
-      that match {
+      that match
         case _: Empty[O] =>
           0
         case _ =>
           -1
-      }
 
   case class Singleton[O : Ordering](o: O) extends ClassExpression[O]:
 
@@ -111,14 +106,13 @@ object ClassExpression:
     override def toString(): String = o.toString()
 
     override def compare(that: ClassExpression[O]): Int =
-      that match {
+      that match
         case _: Empty[O] =>
           1
         case Singleton(x) =>
           o.compare(x)
         case _ =>
           -1
-      }
 
   sealed trait Unary[O : Ordering] extends ClassExpression[O]:
     
@@ -134,14 +128,13 @@ object ClassExpression:
     override def toString(): String = e.toAtom() + "′"
 
     override def compare(that: ClassExpression[O]): Int =
-      that match {
+      that match
         case _ @ ( _: Empty[O] | _: Singleton[O] ) =>
           1
         case Complement(f) =>
           e.compare(f)
         case _ =>
           -1
-      }
 
   sealed trait Binary[O : Ordering] extends ClassExpression[O]:
 
@@ -158,32 +151,29 @@ object ClassExpression:
       if this == e then
         Empty[O]()
       else
-        e match {
+        e match
           case _: Empty[O] =>
             this
           case _: Universal[O] =>
             Empty[O]()
           case _ =>
-            Difference[O](a, b.union(e))     
-        }
+            Difference[O](a, b.union(e))
 
     override def toString(): String =
       toString("\\")
 
     override def compare(that: ClassExpression[O]): Int =
-      that match {
+      that match
         case _ @ ( _: Empty[O] | _: Singleton[O] | _: Complement[O] )  =>
           1
         case Difference(u,v) =>
-          a.compare(u) match {
+          a.compare(u) match
             case 0 =>
               v.compare(b)
             case x =>
               x
-          }
         case _ =>
           -1
-      }
 
   sealed trait NAry[O : Ordering] extends ClassExpression[O]:
 
@@ -200,7 +190,7 @@ object ClassExpression:
         super.toAtom()
 
     def compare(other: SortedSet[ClassExpression[O]]): Int =
-      (s.headOption, other.headOption) match {
+      (s.headOption, other.headOption) match
         case (Some(x), Some(y)) =>
           x.compare(y)
         case (Some(_), None) =>
@@ -209,50 +199,45 @@ object ClassExpression:
           -1
         case _ =>
           0
-      }
 
   case class Intersection[O : Ordering](override val s: SortedSet[ClassExpression[O]]) extends NAry[O]:
 
     override def intersection(e: ClassExpression[O]): ClassExpression[O] =
-      e match {
+      e match
         case Intersection(t) =>
           Intersection[O](s ++ t)
         case _ =>
           Intersection[O](s + e)
-      }
 
     override def toString(): String =
       toString("∩")
 
     override def compare(that: ClassExpression[O]): Int =
-      that match {
+      that match
         case _ @ ( _: Empty[O] | _: Singleton[O] | _: Complement[O] | _: Difference[O] )  =>
           1
         case Intersection(other) =>
           compare(other)
         case _ =>
           -1
-      }
 
   case class Union[O : Ordering](override val s: SortedSet[ClassExpression[O]]) extends NAry[O]:
 
     override def union(e: ClassExpression[O]): ClassExpression[O] =
-      e match {
+      e match
         case Union(t) =>
           Union[O](s ++ t)
         case _ =>
           Union[O](s + e)
-      }
 
     override def toString(): String =
       toString("∪")
 
     override def compare(that: ClassExpression[O]): Int =
-      that match {
+      that match
         case Union(other) =>
           compare(other)
         case _: Universal[O] =>
           -1
         case _ =>
           1
-      }

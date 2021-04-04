@@ -6,7 +6,7 @@ import scala.collection.immutable.SortedSet
 import org.junit.Assert.*
 import org.junit.Test
 
-object TestTaxonomyProperties:
+class TestTaxonomyProperties:
 
   val a = Singleton("a")
   val b = Singleton("b")

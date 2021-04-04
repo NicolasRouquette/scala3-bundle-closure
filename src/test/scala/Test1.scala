@@ -1,10 +1,11 @@
-package io.opencaesar.graph
+import io.opencaesar.graph.*
 
 import org.junit.Test
 import org.junit.Assert._
 
-class Test1 {
-  @Test def t1(): Unit = {
+class Test1:
+
+  @Test def test1(): Unit =
     
     val g1 = DiGraph
       .empty[String]
@@ -33,5 +34,3 @@ class Test1 {
 
     val topo = g2.dfs()
     println(topo)
-  }
-}

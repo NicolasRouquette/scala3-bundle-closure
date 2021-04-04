@@ -1,11 +1,12 @@
-package io.opencaesar.graph
+import io.opencaesar.graph.*
 
 import scala.collection.immutable.SortedSet
 import org.junit.Assert._
 import org.junit.Test
 
-class Test3 {
-  @Test def t3(): Unit = {
+class Test3:
+
+  @Test def t3(): Unit =
 
     val g1 = DiGraph
       .empty[String]
@@ -79,5 +80,3 @@ class Test3 {
         ("m","o"),
         ("n","o")
       ))
-  }
-}
