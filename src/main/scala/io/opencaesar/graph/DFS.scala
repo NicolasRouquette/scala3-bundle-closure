@@ -1,8 +1,5 @@
 package io.opencaesar.graph
 
-import monocle.syntax.all._
-import monocle.Focus
-
 import scala.collection.immutable.{Map,Seq,SortedMap,SortedSet}
 
 case class DFS[V : Ordering](
