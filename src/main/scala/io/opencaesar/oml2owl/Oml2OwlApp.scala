@@ -2,40 +2,31 @@ package io.opencaesar.oml2owl
 
 import io.opencaesar.oml.dsl.OmlStandaloneSetup
 import io.opencaesar.oml.util.OmlXMIResourceFactory
-
 import io.github.vigoo.clipp.*
 import io.github.vigoo.clipp.parsers.*
 import io.github.vigoo.clipp.syntax.*
-import io.github.vigoo.clipp.zioapi.*
-import zio.*
-import zio.console.Console
+import io.github.vigoo.clipp.catseffect3.*
+import cats.effect.*
 
 import java.nio.charset.Charset
+import javax.swing.text.html.parser.Parser
 
-object Oml2OwlApp extends zio.App:
+object Oml2OwlApp extends IOApp:
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-
-    val parameters: ZIO[Console, ParserFailure, Parameters] = Clipp.parseOrFail[Parameters](args, Parameters.parser)
-    val program = for {
-      p <- parameters
-      result <- run(p)
-    } yield result
-
-    program
-      .catchAll {
-        case (_: ParserFailure) =>
-          ZIO.succeed(ExitCode.failure)
-        case (_: Throwable) =>
-          ZIO.succeed(ExitCode.failure)
-      }
-
-  def run(p: Parameters): Task[ExitCode] =
+  override def run(args: List[String]): IO[ExitCode] = {
     for {
-      _ <- ZIO.effect(println(s"Input catalog path= ${p.inputCatalogPath}"))
-      _ <- ZIO.effect(println(s"Output catalog path= ${p.outputCatalogPath}"))
+      parameters <- Clipp.parseOrFail(args, Parameters.parser)
+      status <- run(parameters)
+    } yield status
+  }
+
+  def run(p: Parameters): IO[ExitCode] =
+    for {
+      _ <- IO.println(s"Input catalog path = ${p.inputCatalogPath}")
+      _ <- IO.println(s"Root ontology IRI  = ${p.rootOntologyIri}")
+      _ <- IO.println(s"Output catalog path= ${p.outputCatalogPath}")
       _ = OmlStandaloneSetup.doSetup()
       _ = OmlXMIResourceFactory.register()
-    } yield ExitCode.success
+    } yield ExitCode.Success
 
 

@@ -1,4 +1,5 @@
 package io.opencaesar.oml2owl
+
 import cats.free.Free
 
 import java.io.File
@@ -18,13 +19,6 @@ case class Parameters(
     debug: Boolean = false)
 
 object Parameters:
-
-
-  implicit val booleanParameterParser: ParameterParser[Boolean] = new ParameterParser[Boolean] {
-    override def parse(value: String): Either[String, Boolean] = Try(value.toBoolean).toEither.left.map(_.getMessage)
-
-    override def example: Boolean = false
-  }
 
   val parser: Free[Parameter, Parameters] = for {
     _ <- metadata(
@@ -48,21 +42,18 @@ object Parameters:
       shortName = 'o',
       longNames = "output-catalog-path"
     )
-    disjointUnions <- namedParameter[Boolean](
+    disjointUnions <- flag(
       description = "Create disjoint union axioms",
-      placeholder = "disjoint-unions",
       shortName = 'u',
       longNames = "disjoint-unions"
     )
-    annotationsOnAxioms <- namedParameter[Boolean](
+    annotationsOnAxioms <- flag(
       description = "Emit annotations on axioms",
-      placeholder = "axiom-annotations",
       shortName = 'a',
       longNames = "annotations-on-axioms"
     )
-    debug <- namedParameter[Boolean](
+    debug <- flag(
       description = "Shows debug logging statements",
-      placeholder = "debug",
       shortName = 'd',
       longNames = "debug"
     )
