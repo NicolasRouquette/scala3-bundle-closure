@@ -225,7 +225,7 @@ class TestAsymmetricTaxonomy:
   val disjointUnionAxioms = SortedSet.empty[ClassExpression[String]] ++
     siblingMap.map {
       case (Singleton(s), cs) =>
-        DisjointUnionAxiom(SortedSet.empty ++ cs + Singleton(s))
+        DisjointUnionAxiom(Singleton(s), SortedSet.empty ++ cs)
       case (_, cs) =>
         DisjointClassesAxiom(cs)
     }

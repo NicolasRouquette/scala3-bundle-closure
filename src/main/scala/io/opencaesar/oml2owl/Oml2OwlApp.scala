@@ -59,7 +59,7 @@ object Oml2OwlApp extends IOApp:
       // run the vocabulary bundle closure algorithm
       _ = tuples.foreach {
         case (b: VocabularyBundle, _, owlOntology) =>
-          //CloseVocabularyBundleToOwl(b, owlOntology, p.disjointUnions, owl2api).run
+          CloseVocabularyBundleToOwl(b, owlOntology, p.disjointUnions, owl2api).run()
         case _ =>
           ()
       }
@@ -67,7 +67,7 @@ object Oml2OwlApp extends IOApp:
       // run the description bundle closure algorithm
       _ = tuples.foreach {
         case (d: DescriptionBundle, _, owlOntology) =>
-          //CloseDescriptionBundleToOwl(d, owlOntology, p.disjointUnions, owl2api).run
+          CloseDescriptionBundleToOwl(d, owlOntology, p.disjointUnions, owl2api).run()
         case _ =>
           ()
       }

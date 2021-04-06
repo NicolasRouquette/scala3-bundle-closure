@@ -1,6 +1,7 @@
 package io.opencaesar.oml2owl
 
 import org.semanticweb.owlapi.model.*
+import org.semanticweb.owlapi.model.parameters.ChangeApplied
 import org.semanticweb.owlapi.vocab.OWLFacet
 
 import java.math.BigDecimal
@@ -13,6 +14,57 @@ case class OwlApi
   annotationsOnAxioms: Boolean ):
 
   val factory: OWLDataFactory = manager.getOWLDataFactory
+
+  def addAxiom(o: OWLOntology, a: OWLAxiom): ChangeApplied =
+    manager.addAxiom(o, a)
+
+  def getOWLThing: OWLClass =
+    factory.getOWLThing
+
+  def getOWLNothing: OWLClass =
+    factory.getOWLNothing
+
+  def getOWLClass(iri: IRI): OWLClass =
+    factory.getOWLClass(iri)
+
+  def getOWLDataProperty(iri: IRI): OWLDataProperty =
+    factory.getOWLDataProperty(iri)
+
+  def getOWLObjectProperty(iri: IRI): OWLObjectProperty =
+    factory.getOWLObjectProperty(iri)
+
+  def getOWLNamedIndividual(iri: IRI): OWLNamedIndividual =
+    factory.getOWLNamedIndividual(iri)
+
+  def getOWLObjectInverseOf(property: OWLObjectProperty): OWLObjectInverseOf =
+    factory.getOWLObjectInverseOf(property)
+
+  def getOWLClassAssertionAxiom(ce: OWLClassExpression, i: OWLIndividual): OWLClassAssertionAxiom =
+    factory.getOWLClassAssertionAxiom(ce, i)
+
+  def getOWLObjectComplementOf(e: OWLClassExpression): OWLObjectComplementOf =
+    factory.getOWLObjectComplementOf(e)
+
+  def getOWLObjectIntersectionOf(operands: util.stream.Stream[OWLClassExpression]): OWLObjectIntersectionOf =
+    factory.getOWLObjectIntersectionOf(operands)
+
+  def getOWLObjectUnionOf(operands: util.stream.Stream[OWLClassExpression]): OWLObjectUnionOf =
+    factory.getOWLObjectUnionOf(operands)
+
+  def getOWLDisjointClassesAxiom(operands: util.stream.Stream[OWLClassExpression]): OWLDisjointClassesAxiom =
+    factory.getOWLDisjointClassesAxiom(operands)
+
+  def getOWLEquivalentClassesAxiom(operands: util.stream.Stream[OWLClassExpression]): OWLEquivalentClassesAxiom =
+    factory.getOWLEquivalentClassesAxiom(operands)
+
+  def getOWLDisjointUnionAxiom(c: OWLClass, operands: util.stream.Stream[OWLClassExpression]): OWLDisjointUnionAxiom =
+    factory.getOWLDisjointUnionAxiom(c, operands)
+
+  def getOWLDataMaxCardinality(cardinality: Int, pe: OWLDataPropertyExpression): OWLDataMaxCardinality =
+    factory.getOWLDataMaxCardinality(cardinality, pe)
+
+  def getOWLObjectMaxCardinality(cardinality: Int, pe: OWLObjectPropertyExpression): OWLObjectMaxCardinality =
+    factory.getOWLObjectMaxCardinality(cardinality, pe)
 
   def createIri(iri: String): IRI =
     IRI.create(iri)

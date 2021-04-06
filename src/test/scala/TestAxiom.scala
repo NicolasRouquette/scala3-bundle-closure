@@ -31,10 +31,10 @@ class TestAxiom:
   val eqca2a = EquivalentClassesAxiom[String](SortedSet.empty[ClassExpression[String]] + aub + ciaub + ciaubmd + e)
   val eqca2b = EquivalentClassesAxiom[String](SortedSet.empty[ClassExpression[String]] + bua + buaic + buaicmd + e)
   
-  val djua1a = DisjointUnionAxiom[String](SortedSet.empty[ClassExpression[String]] + aub + ciaub)
-  val djua1b = DisjointUnionAxiom[String](SortedSet.empty[ClassExpression[String]] + bua + buaic)
-  val djua2a = DisjointUnionAxiom[String](SortedSet.empty[ClassExpression[String]] + aub + ciaub + ciaubmd + e)
-  val djua2b = DisjointUnionAxiom[String](SortedSet.empty[ClassExpression[String]] + bua + buaic + buaicmd + e)
+  val djua1a = DisjointUnionAxiom[String](e, SortedSet.empty[ClassExpression[String]] + aub + ciaub)
+  val djua1b = DisjointUnionAxiom[String](e, SortedSet.empty[ClassExpression[String]] + bua + buaic)
+  val djua2a = DisjointUnionAxiom[String](e, SortedSet.empty[ClassExpression[String]] + aub + ciaub + ciaubmd + e)
+  val djua2b = DisjointUnionAxiom[String](e, SortedSet.empty[ClassExpression[String]] + bua + buaic + buaicmd + e)
 
   @Test
   def testHashCode(): Unit =

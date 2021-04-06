@@ -50,15 +50,20 @@ extends ClassExpressionSetAxiom[O]:
         -1
     
 case class DisjointUnionAxiom[O : Ordering]
-(override val set: SortedSet[ClassExpression[O]]) 
+( c: ClassExpression.Singleton[O],
+  override val set: SortedSet[ClassExpression[O]])
 extends ClassExpressionSetAxiom[O]:
 
-  override def toString(): String = toString("DisjointUnion")
+  override def toString(): String = set.toSeq.mkString(s"DisjointUnion($c,", ", ", ")")
 
   override def compare(that: ClassExpressionSetAxiom[O]): Int =
     that match
-      case DisjointUnionAxiom(other) =>
-        compare(other)
+      case DisjointUnionAxiom(d,other) =>
+        c.compare(d) match
+          case 0 =>
+            compare(other)
+          case x =>
+            x
       case _ =>
         1
     

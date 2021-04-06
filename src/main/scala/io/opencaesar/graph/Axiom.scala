@@ -25,7 +25,7 @@ object Axiom:
             case DISJOINT_UNION =>
               acc + (c match
                 case s: ClassExpression.Singleton[O] =>
-                  DisjointUnionAxiom[O](cs + s)
+                  DisjointUnionAxiom[O](s, cs)
                 case _ =>
                   DisjointClassesAxiom[O](cs)
               )
