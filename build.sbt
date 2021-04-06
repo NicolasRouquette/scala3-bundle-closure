@@ -3,6 +3,7 @@ val dottyVersion = "3.0.0-RC2"
 ThisBuild / scalaVersion := dottyVersion
 
 ThisBuild / resolvers += Resolver.bintrayRepo("opencaesar", "oml")
+ThisBuild / resolvers += Resolver.bintrayRepo("opencaesar", "oml-tools")
 
 lazy val root = (project in file("."))
   .settings(
@@ -35,6 +36,7 @@ lazy val root = (project in file("."))
       //"io.github.vigoo" % "clipp-zio_2.13" % "0.6.0",
       "net.sourceforge.owlapi" % "owlapi-distribution" % "5.1.+",
       "io.opencaesar.oml" % "io.opencaesar.oml.dsl" % "0.8.+",
+      "io.opencaesar.oml" % "oml-validate" % "0.8.+",
       "com.novocode" % "junit-interface" % "0.11" % "test"
     )
   )
