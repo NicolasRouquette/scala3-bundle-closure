@@ -1,25 +1,40 @@
 package io.opencaesar.graph
 
-import scala.collection.immutable.{Map,Seq,SortedMap,SortedSet}
+import scala.collection.immutable.{Map,Seq,SortedMap,SortedSet,Vector}
 
+/**
+ * DFS from Introduction to Algorithms, 3rd edition by Cormen et al.
+ * Chapter 22.3
+ *
+ */
 case class DFS[V : Ordering](
-  time: Int,
   d: SortedMap[V, Int],
+  low: SortedMap[V, Int],
   f: SortedMap[V, Int],
-  colors: SortedMap[V, Color], 
   kind: SortedMap[(V, V), Kind],
-  topo: Seq[V])
+  topo: Seq[V],
+  scc: SortedMap[V, DiGraph[V]])
 
 object DFS:
 
-  def dfsInit[V : Ordering](vs: Set[V]): DFS[V] =
-    DFS[V](
-      time = 0,
-      d = SortedMap.empty, 
-      f = SortedMap.empty,
-      colors = SortedMap.empty ++ vs.map(v => v -> Color.White),
-      kind = SortedMap.empty,
-      topo = Seq.empty)
+  case class State[V : Ordering](
+    time: Int,
+    colors: SortedMap[V, Color],
+    stack: Vector[V])
+
+  def dfsInit[V : Ordering](vs: Set[V]): (DFS[V], State[V]) =
+    Tuple2(
+      DFS[V](
+        d = SortedMap.empty,
+        low = SortedMap.empty,
+        f = SortedMap.empty,
+        kind = SortedMap.empty,
+        topo = Seq.empty,
+        scc = SortedMap.empty),
+      State[V](
+        time = 0,
+        colors = SortedMap.empty ++ vs.map(v => v -> Color.White),
+        stack = Vector.empty))
 
   extension[V : Ordering](g: DiGraph[V])
 
@@ -32,68 +47,110 @@ object DFS:
      * @return A topological sorting of vertices of g.
      */
     def dfs(): DFS[V] =
-      val init = dfsInit(g.vs)
-      dfs(init)
+      val (init, s0) = dfsInit(g.vs)
+      dfs(init, s0)
   
     /**
      * dfs starting from a vertex, v
      */
     def dfs(v: V): DFS[V] =
       require(g.vs.contains(v))
-      val init = dfsInit(Set[V](v))
-      dfs(init)
+      val (init, s0) = dfsInit(Set[V](v))
+      dfs(init, s0)
 
-    private def dfs(state: DFS[V]): DFS[V] =
-      require(state.colors.keys.forall(g.vs.contains))
-      require(state.topo.forall(t => g.vs.contains(t) && state.colors.getOrElse(t, Color.White) == Color.Black))
-      state.colors.find(_._2 == Color.White) match
+    def dfs(init: DFS[V], s0: State[V]): DFS[V] =
+      require(s0.colors.keys.forall(g.vs.contains))
+      require(init.topo.forall(t => g.vs.contains(t) && s0.colors.getOrElse(t, Color.White) == Color.Black))
+      s0.colors.find(_._2 == Color.White) match
         case None =>
-          state
+          init
 
         case Some((u, _)) =>
-          val update = state.copy(colors = state.colors.updated(u, Color.Gray))
-          val next = dfsVisit(u, g.childrenOf(u), update)
-          dfs(next)
+          val s1 = s0.copy(colors = s0.colors.updated(u, Color.Gray))
+          val (next, s2) = dfsVisit(u, g.childrenOf(u), init, s1)
+          dfs(next, s2)
 
-    private def dfsVisit(u: V, vs: SortedSet[V], s0: DFS[V]): DFS[V] =
+    def dfsVisit(u: V, vs: SortedSet[V], i0: DFS[V], s0: State[V]): (DFS[V], State[V]) =
       require(g.vs.contains(u))
       require(vs.forall(g.vs.contains))
       require(s0.colors.keys.forall(g.vs.contains))
-      require(s0.topo.forall(t => g.vs.contains(t) && s0.colors.getOrElse(t, Color.White) == Color.Black))
-      require(vs.forall(v => !s0.kind.contains((u,v))))
-      require(!s0.f.contains(u))
+      require(i0.topo.forall(t => g.vs.contains(t) && s0.colors.getOrElse(t, Color.White) == Color.Black))
+      require(vs.forall(v => !i0.kind.contains((u,v))))
+      require(!i0.f.contains(u))
 
-      val s1 = 
-      if s0.d.contains(u) then
-        s0
+      val (i1, s1) =
+      if i0.d.contains(u) then
+        Tuple2(i0, s0)
       else
         val td = 1 + s0.time
-        s0.copy(time = td, d = s0.d.updated(u, td))
+        Tuple2(
+          i0.copy(
+            d = i0.d.updated(u, td),
+            low = i0.low.updated(u, td)),
+          s0.copy(
+            time = td,
+            stack = s0.stack.prepended(u)))
 
       if vs.isEmpty then
+
         val tf = 1 + s1.time
-        s1.copy(
+        val i2 = i1.copy(
+          f = i1.f.updated(u, tf),
+          topo = u +: i1.topo)
+        val s2 = s1.copy(
           time = tf,
-          f = s1.f.updated(u, tf),
-          colors = s1.colors.updated(u, Color.Black),
-          topo = u +: s1.topo)
+          colors = s1.colors.updated(u, Color.Black))
+        assert(i2.low.contains(u))
+        assert(i2.d.contains(u))
+        if i2.low(u) == i2.d(u) then
+          val n = s2.stack.indexOf(u)
+          val scc_vs = SortedSet(u) ++ s2.stack.take(n)
+          val scc_es = g.es.filter { case (e1,e2) => scc_vs.contains(e1) && scc_vs.contains(e2) }
+          val ssc_g0 = scc_vs.foldLeft(DiGraph.empty[V])(_.addVertex(_))
+          val ssc_g1 = scc_es.foldLeft(ssc_g0)(_.addEdge.tupled(_))
+          Tuple2(
+            i2.copy(scc = i2.scc.updated(u, ssc_g1)),
+            s2.copy(stack = s2.stack.drop(n+1)))
+        else
+          Tuple2(i2, s2)
+
       else
+
         val (v, vt) = (vs.head, vs.tail)
         s1.colors.getOrElse(v, Color.White) match
           case Color.White =>
-            val s2 = s1.copy(
-              colors = s1.colors.updated(v, Color.Gray),
-              kind =  s1.kind.updated((u,v), Kind.Tree))
-            val s3 = dfsVisit(v, g.childrenOf(v), s2)
-            dfsVisit(u, vt, s3)
+            val i2 = i1.copy(kind =  i1.kind.updated((u,v), Kind.Tree))
+            val s2 = s1.copy(colors = s1.colors.updated(v, Color.Gray))
+            val (i3, s3) = dfsVisit(v, g.childrenOf(v), i2, s2)
+            assert(i3.low.contains(u))
+            assert(i3.low.contains(v))
+            val i4 = i3.copy(low = i3.low.updated(u, i3.low(u).min(i3.low(v))))
+            dfsVisit(u, vt, i4, s3)
+
           case Color.Gray =>
-            val s2 = s1.copy(kind = s1.kind.updated((u,v), Kind.Back))
-            dfsVisit(u, vt, s2)
+            assert(i1.low.contains(u))
+            assert(i1.d.contains(v))
+            val (i2, s2) =
+              Tuple2(
+                i1.copy(
+                  low = if s1.stack.contains(v) then i1.low.updated(u, i1.low(u).min(i1.d(v))) else i1.low,
+                  kind = i1.kind.updated((u,v), Kind.Back)),
+                s1)
+            dfsVisit(u, vt, i2, s2)
+
           case Color.Black =>
-            val ud = s1.d.getOrElse(u, 0)
-            val vd = s1.d.getOrElse(v, 0)
-            val s2 = s1.copy(kind = s1.kind.updated((u,v), if ud < vd then Kind.Forward else Kind.Cross))
-            dfsVisit(u, vt, s2)
+            assert(i1.low.contains(u))
+            assert(i1.d.contains(u))
+            val ud = i1.d(u)
+            assert(i1.d.contains(v))
+            val vd = i1.d(v)
+            val (i2, s2) =
+              Tuple2(
+                i1.copy(
+                  low = if s1.stack.contains(v) then i1.low.updated(u, ud.min(vd)) else i1.low,
+                  kind = i1.kind.updated((u,v), if ud < vd then Kind.Forward else Kind.Cross)),
+                s1)
+            dfsVisit(u, vt, i2, s2)
     
     /**
      * Taxonomy.descendantsOf
@@ -103,7 +160,7 @@ object DFS:
       require(g.vs.contains(v))
       SortedSet.empty[V] ++ dfs(v).topo - v
 
-    /**
+    /*
      * Taxonomy.directChildrenOf
      * @see: https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L62
      */
@@ -241,7 +298,7 @@ object DFS:
         t
       }
 
-    def isConnected(): Boolean =
+    def isConnected: Boolean =
       val r = g.roots()
       r.size == 1
 
@@ -250,7 +307,7 @@ object DFS:
       if  r.size > 1 then
         throw UnconnectedTaxonomyException(s"A single connected graph should have only one root vertex instead of ${r.size}.")
 
-    def isTree(): Boolean =
+    def isTree: Boolean =
       val r = g.roots()
       r.size match
         case 1 =>
@@ -261,7 +318,6 @@ object DFS:
 
         case _ =>
           false
-
 
     def ensureTree(): Unit = 
       val r = g.roots()
@@ -274,4 +330,7 @@ object DFS:
         if nonTree.nonEmpty then
           throw InvalidTreeException(s"The graph is not a tree because there are ${nonTree.size} non-tree edges starting from the root $r0")
         
-      
+    def transitiveClosure(): DiGraph[V] =
+      val info = dfs()
+      info.topo.reverse
+      g

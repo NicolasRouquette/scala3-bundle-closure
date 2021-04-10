@@ -24,6 +24,11 @@ case class DiGraph[V : Ordering]
     require(DiGraph.hasAllVertices(vs, outNeighbors.keySet))
     require(outNeighbors.values.forall(DiGraph.hasAllVertices(vs, _)))
 
+    override def toString: String =
+      val vsi = vs.toSeq
+      vsi.zipWithIndex.map{ (v, i) => s"$i=$v" }.mkString("G(v={", ", ", "};") +
+        es.map { (u,v) => s"(${vsi.indexOf(u)},${vsi.indexOf(v)})" }.mkString(" e={", ", ", "})")
+
     /**
      * Add a node to the graph
      * @param v node

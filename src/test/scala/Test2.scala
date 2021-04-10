@@ -17,6 +17,7 @@ class Test2:
       .addVertex("jacket")
       .addVertex("socks")
       .addVertex("shoes")
+      .addVertex("watch")
 
     val g2 = g1
       .addEdge("undershorts", "shoes")
@@ -31,8 +32,8 @@ class Test2:
     
     import DFS.dfs
 
-    val topo = g2.dfs()
-    println(topo)
+    val result = g2.dfs()
+    println(result.topo)
     
     val ri = g2.ri()
     println(ri)
