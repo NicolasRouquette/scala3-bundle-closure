@@ -6,10 +6,10 @@ case class TransitiveClosure[V: Ordering](data: SortedMap[V, SortedSet[V]]):
 
   def successors(from: V): SortedSet[V] =
     data.getOrElse(from, SortedSet.empty[V])
-    
+
   def reachable(from: V, to: V): Boolean =
     successors(from).contains(to)
-    
+
 object TransitiveClosure:
 
   extension[V: Ordering](g: DiGraph[V])

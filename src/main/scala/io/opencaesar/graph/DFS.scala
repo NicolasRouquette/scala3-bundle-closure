@@ -70,7 +70,7 @@ object DFS:
           val (next, s2) = dfsVisit(u, g.childrenOf(u), init, s1)
           dfs(next, s2)
 
-    def dfsVisit(u: V, vs: SortedSet[V], i0: DFS[V], s0: State[V]): (DFS[V], State[V]) =
+    final def dfsVisit(u: V, vs: SortedSet[V], i0: DFS[V], s0: State[V]): (DFS[V], State[V]) =
       require(g.vs.contains(u))
       require(vs.forall(g.vs.contains))
       require(s0.colors.keys.forall(g.vs.contains))

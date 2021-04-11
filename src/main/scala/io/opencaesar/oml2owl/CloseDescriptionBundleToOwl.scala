@@ -1,8 +1,9 @@
 package io.opencaesar.oml2owl
 
 import io.opencaesar.oml.*
-import io.opencaesar.oml.util.{OmlRead, OmlSearch}
-import org.semanticweb.owlapi.model.OWLOntology
+import io.opencaesar.oml.util.{OmlIndex, OmlRead, OmlSearch}
+import org.semanticweb.owlapi.model.*
+import org.semanticweb.owlapi.model.parameters.ChangeApplied
 import io.opencaesar.graph.DiGraph
 import io.opencaesar.graph.DFS.dfs
 import io.opencaesar.graph.TransitiveClosure
@@ -19,8 +20,52 @@ case class CloseDescriptionBundleToOwl
  disjointUnions: Boolean,
  owlApi: OwlApi):
 
+  import CloseDescriptionBundleToOwl.*
+
   def run(): Unit =
-    val allOntologies = OmlRead.reflexiveClosure(o, OmlRead.getImportedOntologies).asScala.toSet
+    val allOntologies: Set[Ontology] = OmlRead.reflexiveClosure(o, OmlRead.getImportedOntologies).asScala.toSet
+
+    val entitiesWithRestrictedScalarProperties: Map[Entity, Set[ScalarProperty]]
+    = getEntitiesWithRestrictedScalarProperties(allOntologies)
+
+    val entitiesWithRestrictedStructuredProperties: Map[Entity, Set[StructuredProperty]]
+    = getEntitiesWithRestrictedStructuredProperties(allOntologies)
+
+    val entitiesWithRestrictedRelations: Map[Entity, Set[Relation]]
+    = getEntitiesWithRestrictedRelations(allOntologies)
+
+    val allRestrictedEntities: Set[Entity] =
+      entitiesWithRestrictedScalarProperties.keySet ++
+      entitiesWithRestrictedStructuredProperties.keySet ++
+      entitiesWithRestrictedRelations.keySet
+
+    val termSpecializations = getTermSpecializations(allOntologies)
+    val propertyTrees = getPropertyTrees(allOntologies)
+    val relationTrees = getRelationTrees(allOntologies)
+
+    val entityInstances: Map[Entity, Set[NamedInstance]]
+    = getEntityInstances(allOntologies, allRestrictedEntities, termSpecializations)
+
+    // Generate data cardinality restrictions for scalar properties
+
+    val scalarPropertyCounts: Map[NamedInstance, Map[ScalarProperty, Integer]]
+    = getScalarPropertyCounts(entitiesWithRestrictedScalarProperties, entityInstances, termSpecializations, propertyTrees)
+
+    ScalarFeatureCounts.generateCardinalityRestrictions(owlOntology, owlApi, scalarPropertyCounts)
+
+    // Generate object cardinality restrictions for structured properties and relations.
+
+    val structuredPropertyCounts
+    : Map[NamedInstance, Map[StructuredProperty, Integer]]
+    = getStructuredPropertyCounts(entitiesWithRestrictedStructuredProperties, entityInstances, termSpecializations, propertyTrees)
+
+    StructuredFeatureCounts.generateCardinalityRestrictions(owlOntology, owlApi, structuredPropertyCounts)
+
+    val relationCounts
+    : Map[NamedInstance, Map[Relation, Integer]]
+    = getRelationCounts(entitiesWithRestrictedRelations, entityInstances, termSpecializations, relationTrees)
+
+    RelationCounts.generateCardinalityRestrictions(owlOntology, owlApi, relationCounts)
 
     ()
 
@@ -327,60 +372,106 @@ object CloseDescriptionBundleToOwl:
   }
 
   /**
-   * The java code for getScalarpropertyCounts and getStructuredPropertyCounts is very similar.
-   * The differences pertain to the kind of property (scalar vs. structured)
-   * and the kind of values they can have (literal vs. structured instance)
+   * Looking at the Java implementation of getScalarPropertyCounts, getStructuredPropertyCounts and getRelationCounts
+   * one can notice similarities:
+   * - all 3 involve a type argument used in several places (property or relation)
+   *   This type is called PropertyOrRelationArgument
+   * - all 3 involve a kind of property or relation (scalar/structured property or relation)
+   *   This tyoe is called PropertyOrRelationKind
+   * - all 3 involve counting the cardinality of property/relation values or instances
+   *   This type is called ValueOrInstance
+   *  
+   * Furthermore, the generation of OWL cardinality restriction axioms is structurally identical
+   * for scalar properties, structured properties and relations; which leads to a generalization
+   * (see generateCardinalityRestrictions)
    *
-   * The FeatureCounts trait allows for generalizing the logic of these two methods into one
-   * where the differences are captured in the different implementations of the trait.
+   * The common logic for all 3 methods can be generalized with the help of two parameterized functions:
+   * - how to get the tree of properties/relations for a given property or relation
+   *   This is the method: getPropertyOrRelationTree
+   *
+   * - collecting all values or instances in the range of a property or relation for a given subject instance
+   *   This is the method collectPropertyOrRelationValuesOrInstancesForSubject
+   *
+   * The common logic defined in getFeaturePropertyCounts is parameterized with an instance of the trait FeatureCounts
    */
   trait FeatureCounts:
-    type PropertyKind <: FeatureProperty
-    type PVA <: (ScalarPropertyValueAssertion | StructuredPropertyValueAssertion)
-    type Value <: (Literal | StructureInstance)
+    type PropertyOrRelationArgument <: (Property | Relation)
+    type PropertyOrRelationKind <: (ScalarProperty | StructuredProperty | Relation) & PropertyOrRelationArgument
+    type ValueOrInstance <: (Literal | StructureInstance | NamedInstance)
 
-    def filterProperty(p: Property): Option[PropertyKind]
-    def getProperty(pva: PropertyValueAssertion): Option[PropertyKind]
-    def getValue(pva: PropertyValueAssertion): Option[Value]
+    def filterProperty(p: PropertyOrRelationArgument): Option[PropertyOrRelationKind]
 
+    def getPropertyOrRelationTree
+    (propertyOrRelationTrees: Map[PropertyOrRelationArgument, DiGraph[PropertyOrRelationArgument]],
+     propertyOrRelation: PropertyOrRelationArgument)
+    : DiGraph[PropertyOrRelationArgument]
+
+    def collectPropertyOrRelationValuesOrInstancesForSubject
+    (subj: NamedInstance,
+     allPropertiesOrRelations: Set[PropertyOrRelationArgument])
+    : Map[PropertyOrRelationKind, Set[ValueOrInstance]]
+
+    def generateCardinalityRestrictions
+    (owlOntology: OWLOntology,
+     owlApi: OwlApi,
+     instancePropertyOrRelationCounts: Map[NamedInstance, Map[PropertyOrRelationKind, Integer]])
+    : Unit
+    = instancePropertyOrRelationCounts.foreach { case (subj, counts) =>
+      val subj_iri = IRI.create(OmlRead.getIri(subj))
+      val ni: OWLNamedIndividual = owlApi.getOWLNamedIndividual(subj_iri)
+      counts.foreach { case (prop, count) =>
+        val prop_iri = IRI.create(OmlRead.getIri(prop))
+        val op: OWLObjectProperty = owlApi.getOWLObjectProperty(prop_iri)
+        val mc: OWLObjectMaxCardinality = owlApi.getOWLObjectMaxCardinality(count, op)
+        val ax: OWLClassAssertionAxiom = owlApi.getOWLClassAssertionAxiom(mc, ni)
+        val change = owlOntology.addAxiom(ax)
+        assert(change != ChangeApplied.UNSUCCESSFULLY)
+      }
+    }
+
+  /**
+   *
+   * @param fc An instance of the FeatureCounts traits providing two kinds of members:
+   *           - types (e.g., PropertyOrRelationArgument)
+   *           - methods (e.g., filterProperty)
+   * @param entitiesWithRestrictions a map whose type depends on an fc type member.
+   * @param entityInstances
+   * @param termSpecializations
+   * @param propertyOrRelationTrees a map whose type depends on an fc type member.
+   * @tparam FC
+   * @return counts of values or instances that are in the range of property or relations of instance subjects.
+   *         note that the result type depends on an fc type member.
+   */
   def getFeaturePropertyCounts[FC <: FeatureCounts]
   (fc: FC,
-   entitiesWithRestrictedProperties: Map[Entity, Set[fc.PropertyKind]],
+   entitiesWithRestrictions: Map[Entity, Set[fc.PropertyOrRelationKind]],
    entityInstances: Map[Entity, Set[NamedInstance]],
    termSpecializations: TransitiveClosure[SpecializableTerm],
-   propertyTrees: Map[Property, DiGraph[Property]])
-  : Map[NamedInstance, Map[fc.PropertyKind, Integer]]
-  = entitiesWithRestrictedProperties.foldLeft(Map.empty[NamedInstance, Map[fc.PropertyKind, Integer]]) {
-    case (result1, (entity, properties)) =>
+   propertyOrRelationTrees: Map[fc.PropertyOrRelationArgument, DiGraph[fc.PropertyOrRelationArgument]])
+  : Map[NamedInstance, Map[fc.PropertyOrRelationKind, Integer]]
+  = entitiesWithRestrictions.foldLeft(Map.empty[NamedInstance, Map[fc.PropertyOrRelationKind, Integer]]) {
+    case (result1, (entity, propertiesOrRelations)) =>
 
-      val allProperties: Set[Property] = properties.foldLeft(Set.empty) { case (acc, p) =>
-        acc ++ getPropertyTree(propertyTrees, p).vs
+      val allPropertiesOrRelations: Set[fc.PropertyOrRelationArgument] = propertiesOrRelations.foldLeft(Set.empty) { case (acc, p) =>
+        acc ++ fc.getPropertyOrRelationTree(propertyOrRelationTrees, p).vs
       }
 
       entityInstances.getOrElse(entity, Set.empty).foldLeft(result1) { case (result2, subj) =>
 
-        val subj_vals: Map[fc.PropertyKind, Set[fc.Value]] =
-          OmlSearch.findPropertyValueAssertions(subj).asScala.foldLeft(Map.empty) {
-            case (acc, pva) =>
-              (fc.getProperty(pva), fc.getValue(pva)) match
-                case (Some(prop), Some(v: fc.Value)) =>
-                  acc.updated(prop, acc.getOrElse(prop, Set.empty) + v)
-                case (_, _) =>
-                  // ignore cases where either the property or the value is null.
-                  acc
-          }
+        val subj_vals: Map[fc.PropertyOrRelationKind, Set[fc.ValueOrInstance]] =
+          fc.collectPropertyOrRelationValuesOrInstancesForSubject(subj, allPropertiesOrRelations)
 
-        val subj_counts: Map[fc.PropertyKind, Integer] = properties.foldLeft(Map.empty) {
+        val subj_counts: Map[fc.PropertyOrRelationKind, Integer] = propertiesOrRelations.foldLeft(Map.empty) {
           case (acc1, prop) =>
-            val propertyTree = getPropertyTree(propertyTrees, prop)
+            val propertyTree = fc.getPropertyOrRelationTree(propertyOrRelationTrees, prop)
             propertyTree.vs.foldLeft(acc1) {
               case (acc2, p) =>
                 fc.filterProperty(p) match
-                  case Some(sp: fc.PropertyKind) =>
-                    val vals: Set[fc.Value] = propertyTree.childrenOf(sp).foldLeft(Set.empty) {
+                  case Some(sp: fc.PropertyOrRelationKind) =>
+                    val vals: Set[fc.ValueOrInstance] = propertyTree.childrenOf(sp).foldLeft(Set.empty) {
                       case (acc, q) =>
                         fc.filterProperty(q) match
-                          case Some(sq: fc.PropertyKind) =>
+                          case Some(sq: fc.PropertyOrRelationKind) =>
                             acc ++ subj_vals.getOrElse(sq, Set.empty)
                           case _ =>
                             acc
@@ -396,74 +487,172 @@ object CloseDescriptionBundleToOwl:
   }
 
   case object ScalarFeatureCounts extends FeatureCounts:
-    override type PropertyKind = ScalarProperty
-    override type PVA = ScalarPropertyValueAssertion
-    override type Value = Literal
+    override type PropertyOrRelationArgument = Property
+    override type PropertyOrRelationKind = ScalarProperty
+    override type ValueOrInstance = Literal
 
-    override def filterProperty(p: Property): Option[PropertyKind] = p match
+    override def filterProperty(p: PropertyOrRelationArgument): Option[PropertyOrRelationKind] = p match
       case sp: ScalarProperty =>
         Some(sp)
       case _ =>
         None
 
-    override def getProperty(pva: PropertyValueAssertion): Option[PropertyKind] = pva match
+    override def getPropertyOrRelationTree
+    (propertyOrRelationTrees: Map[PropertyOrRelationArgument, DiGraph[PropertyOrRelationArgument]],
+     propertyOrRelation: PropertyOrRelationArgument)
+    : DiGraph[PropertyOrRelationArgument]
+    = getPropertyTree(propertyOrRelationTrees, propertyOrRelation)
+
+    override def collectPropertyOrRelationValuesOrInstancesForSubject
+    (subj: NamedInstance,
+     allPropertiesOrRelations: Set[PropertyOrRelationArgument])
+    : Map[PropertyOrRelationKind, Set[ValueOrInstance]]
+    = OmlSearch.findPropertyValueAssertions(subj).asScala.foldLeft(Map.empty) {
+      case (acc, pva) =>
+        (getPropertyOrRelation(pva), getValueOrInstance(pva)) match
+          case (Some(prop), Some(v: ValueOrInstance)) if allPropertiesOrRelations.contains(prop) =>
+            acc.updated(prop, acc.getOrElse(prop, Set.empty) + v)
+          case (_, _) =>
+            // ignore cases where either the property or the value is null.
+            acc
+    }
+
+    def getPropertyOrRelation(pva: PropertyValueAssertion): Option[PropertyOrRelationKind] = pva match
       case spva: ScalarPropertyValueAssertion =>
         Option.apply(spva.getProperty)
       case _ =>
         None
 
-    override def getValue(pva: PropertyValueAssertion): Option[Value] = pva match
+    def getValueOrInstance(pva: PropertyValueAssertion): Option[ValueOrInstance] = pva match
       case spva: ScalarPropertyValueAssertion =>
         Option.apply(spva.getValue)
       case _ =>
         None
 
   def getScalarPropertyCounts
-  (entitiesWithRestrictedProperties: Map[Entity, Set[ScalarProperty]],
+  (entitiesWithRestrictions: Map[Entity, Set[ScalarProperty]],
    entityInstances: Map[Entity, Set[NamedInstance]],
    termSpecializations: TransitiveClosure[SpecializableTerm],
-   propertyTrees: Map[Property, DiGraph[Property]])
+   propertyOrRelationTrees: Map[Property, DiGraph[Property]])
   : Map[NamedInstance, Map[ScalarProperty, Integer]]
   = getFeaturePropertyCounts(
     ScalarFeatureCounts,
-    entitiesWithRestrictedProperties,
+    entitiesWithRestrictions,
     entityInstances,
     termSpecializations,
-    propertyTrees)
+    propertyOrRelationTrees)
 
   case object StructuredFeatureCounts extends FeatureCounts:
-    override type PropertyKind = StructuredProperty
-    override type PVA = StructuredPropertyValueAssertion
-    override type Value = StructureInstance
+    override type PropertyOrRelationArgument = Property
+    override type PropertyOrRelationKind = StructuredProperty
+    override type ValueOrInstance = StructureInstance
 
-    override def filterProperty(p: Property): Option[PropertyKind] = p match
+    override def filterProperty(p: PropertyOrRelationArgument): Option[PropertyOrRelationKind] = p match
       case sp: StructuredProperty =>
         Some(sp)
       case _ =>
         None
 
-    override def getProperty(pva: PropertyValueAssertion): Option[PropertyKind] = pva match
+    override def getPropertyOrRelationTree
+    (propertyOrRelationTrees: Map[PropertyOrRelationArgument, DiGraph[PropertyOrRelationArgument]],
+     propertyOrRelation: PropertyOrRelationArgument)
+    : DiGraph[PropertyOrRelationArgument]
+    = getPropertyTree(propertyOrRelationTrees, propertyOrRelation)
+
+    override def collectPropertyOrRelationValuesOrInstancesForSubject
+    (subj: NamedInstance,
+     allPropertiesOrRelations: Set[PropertyOrRelationArgument])
+    : Map[PropertyOrRelationKind, Set[ValueOrInstance]]
+    = OmlSearch.findPropertyValueAssertions(subj).asScala.foldLeft(Map.empty) {
+      case (acc, pva) =>
+        (getPropertyOrRelation(pva), getValueOrInstance(pva)) match
+          case (Some(prop), Some(v: ValueOrInstance)) if allPropertiesOrRelations.contains(prop) =>
+            acc.updated(prop, acc.getOrElse(prop, Set.empty) + v)
+          case (_, _) =>
+            // ignore cases where either the property or the value is null.
+            acc
+    }
+
+    def getPropertyOrRelation(pva: PropertyValueAssertion): Option[PropertyOrRelationKind] = pva match
       case spva: StructuredPropertyValueAssertion =>
         Option.apply(spva.getProperty)
       case _ =>
         None
 
-    override def getValue(pva: PropertyValueAssertion): Option[Value] = pva match
+    def getValueOrInstance(pva: PropertyValueAssertion): Option[ValueOrInstance] = pva match
       case spva: StructuredPropertyValueAssertion =>
         Option.apply(spva.getValue)
       case _ =>
         None
 
   def getStructuredPropertyCounts
-  (entitiesWithRestrictedProperties: Map[Entity, Set[StructuredProperty]],
+  (entitiesWithRestrictions: Map[Entity, Set[StructuredProperty]],
    entityInstances: Map[Entity, Set[NamedInstance]],
    termSpecializations: TransitiveClosure[SpecializableTerm],
-   propertyTrees: Map[Property, DiGraph[Property]])
+   propertyOrRelationTrees: Map[Property, DiGraph[Property]])
   : Map[NamedInstance, Map[StructuredProperty, Integer]]
   = getFeaturePropertyCounts(
     StructuredFeatureCounts,
-    entitiesWithRestrictedProperties,
+    entitiesWithRestrictions,
     entityInstances,
     termSpecializations,
-    propertyTrees)
+    propertyOrRelationTrees)
+
+  case object RelationCounts extends FeatureCounts:
+    override type PropertyOrRelationArgument = Relation
+    override type PropertyOrRelationKind = Relation
+    override type ValueOrInstance = NamedInstance
+
+    override def filterProperty(p: PropertyOrRelationArgument): Option[PropertyOrRelationKind] = p match
+      case sp: StructuredProperty =>
+        Some(sp)
+      case _ =>
+        None
+
+    override def getPropertyOrRelationTree
+    (propertyOrRelationTrees: Map[PropertyOrRelationArgument, DiGraph[PropertyOrRelationArgument]],
+     propertyOrRelation: PropertyOrRelationArgument)
+    : DiGraph[PropertyOrRelationArgument]
+    = getRelationTree(propertyOrRelationTrees, propertyOrRelation)
+
+    override def collectPropertyOrRelationValuesOrInstancesForSubject
+    (subj: NamedInstance,
+     allPropertiesOrRelations: Set[PropertyOrRelationArgument])
+    : Map[PropertyOrRelationKind, Set[ValueOrInstance]]
+    = {
+      val m1: Map[PropertyOrRelationKind, Set[ValueOrInstance]] =
+        OmlIndex.findRelationInstancesWithSource(subj).asScala.foldLeft(Map.empty) {
+          case (acc1, ri) =>
+            ri.getOwnedTypes.asScala.foldLeft(acc1) { case (acc2, rta) =>
+              val rel = rta.getType.getForwardRelation
+              if allPropertiesOrRelations.contains(rel) then
+                acc2.updated(rel, acc2.getOrElse(rel, Set.empty) ++ ri.getTargets.asScala.toSet)
+              else
+                acc2
+            }
+        }
+      val m2 =
+        OmlSearch.findLinkAssertionsWithSource(subj).asScala.foldLeft(m1) {
+          case (acc, link) =>
+            val rel = link.getRelation
+            if allPropertiesOrRelations.contains(rel) then
+              acc.updated(rel, acc.getOrElse(rel, Set.empty) + link.getTarget)
+            else
+              acc
+        }
+      m2
+    }
+
+  def getRelationCounts
+  (entitiesWithRestrictions: Map[Entity, Set[Relation]],
+   entityInstances: Map[Entity, Set[NamedInstance]],
+   termSpecializations: TransitiveClosure[SpecializableTerm],
+   propertyOrRelationTrees: Map[Relation, DiGraph[Relation]])
+  : Map[NamedInstance, Map[Relation, Integer]]
+  = getFeaturePropertyCounts(
+    RelationCounts,
+    entitiesWithRestrictions,
+    entityInstances,
+    termSpecializations,
+    propertyOrRelationTrees)
 
