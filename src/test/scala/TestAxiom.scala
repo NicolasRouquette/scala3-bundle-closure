@@ -155,7 +155,7 @@ class TestAxiom:
     Assert.assertEquals("eqca2a", "EquivalentClasses(" + eqca2a.set.toSeq.map(_.toString()).mkString(", ") + ")", eqca2a.toString())
     Assert.assertEquals("eqca2b", "EquivalentClasses(" + eqca2b.set.toSeq.map(_.toString()).mkString(", ") + ")", eqca2b.toString())
 
-    Assert.assertEquals("djua1a", "DisjointUnion(" + djua1a.set.toSeq.map(_.toString()).mkString(", ") + ")", djua1a.toString())
-    Assert.assertEquals("djua1b", "DisjointUnion(" + djua1b.set.toSeq.map(_.toString()).mkString(", ") + ")", djua1b.toString())
-    Assert.assertEquals("djua2a", "DisjointUnion(" + djua2a.set.toSeq.map(_.toString()).mkString(", ") + ")", djua2a.toString())
-    Assert.assertEquals("djua2b", "DisjointUnion(" + djua2b.set.toSeq.map(_.toString()).mkString(", ") + ")", djua2b.toString())
+    Assert.assertEquals("djua1a", "DisjointUnion(" + djua1a.c + "," + djua1a.set.toSeq.map(_.toString()).mkString(", ") + ")", djua1a.toString())
+    Assert.assertEquals("djua1b", "DisjointUnion(" + djua1a.c + "," + djua1b.set.toSeq.map(_.toString()).mkString(", ") + ")", djua1b.toString())
+    Assert.assertEquals("djua2a", "DisjointUnion(" + djua1a.c + "," + djua2a.set.toSeq.map(_.toString()).mkString(", ") + ")", djua2a.toString())
+    Assert.assertEquals("djua2b", "DisjointUnion(" + djua1a.c + "," + djua2b.set.toSeq.map(_.toString()).mkString(", ") + ")", djua2b.toString())

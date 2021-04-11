@@ -74,13 +74,17 @@ object DFS:
       require(g.vs.contains(u))
       require(vs.forall(g.vs.contains))
       require(s0.colors.keys.forall(g.vs.contains))
+      require(s0.colors.get(u) == Some(Color.White) || s0.colors.get(u) == Some(Color.Gray))
       require(i0.topo.forall(t => g.vs.contains(t) && s0.colors.getOrElse(t, Color.White) == Color.Black))
       require(vs.forall(v => !i0.kind.contains((u,v))))
       require(!i0.f.contains(u))
 
       val (i1, s1) =
       if i0.d.contains(u) then
-        Tuple2(i0, s0)
+        assert(s0.colors.get(u) == Some(Color.Gray))
+        Tuple2(
+          i0,
+          s0)
       else
         val td = 1 + s0.time
         Tuple2(
@@ -89,7 +93,8 @@ object DFS:
             low = i0.low.updated(u, td)),
           s0.copy(
             time = td,
-            stack = s0.stack.prepended(u)))
+            stack = s0.stack.prepended(u),
+            colors = s0.colors.updated(u, Color.Gray)))
 
       if vs.isEmpty then
 
