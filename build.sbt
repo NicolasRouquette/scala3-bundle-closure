@@ -1,4 +1,4 @@
-val dottyVersion = "3.0.0-RC2"
+val dottyVersion = "3.0.0"
 
 ThisBuild / scalaVersion := dottyVersion
 
@@ -30,9 +30,9 @@ lazy val root = (project in file("."))
       //"dev.zio" %% "zio" % "1.0.5",
       //"pl.iterators" % "kebs-tagged" % "1.9.0",
 
-      "org.typelevel" %% "cats-effect"     % "3.0.1",
-      "org.typelevel" %% "cats-core" % "2.5.0",
-      "org.typelevel" %% "cats-free" % "2.5.0",
+      "org.typelevel" %% "cats-effect"     % "3.1.1",
+      "org.typelevel" %% "cats-core" % "2.6.1",
+      "org.typelevel" %% "cats-free" % "2.6.1",
       //"io.github.vigoo" % "clipp-zio_2.13" % "0.6.0",
       "net.sourceforge.owlapi" % "owlapi-distribution" % "5.1.+",
       "io.opencaesar.oml" % "io.opencaesar.oml.dsl" % "0.8.+",
