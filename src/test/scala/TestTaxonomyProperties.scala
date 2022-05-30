@@ -29,9 +29,9 @@ class TestTaxonomyProperties:
 
   @Test
   def testConnected(): Unit =
-    assertFalse(notConnectedNotTree.isConnected())
-    assertTrue(connectedTree.isConnected())
-    assertTrue(connectedNotTree.isConnected())
+    assertFalse(notConnectedNotTree.isConnected)
+    assertTrue(connectedTree.isConnected)
+    assertTrue(connectedNotTree.isConnected)
 
   @Test
   def testEnsureConnected(): Unit =
@@ -58,9 +58,9 @@ class TestTaxonomyProperties:
 
   @Test
   def testIsTree(): Unit =
-    assertFalse(notConnectedNotTree.isTree())
-    assertTrue(connectedTree.isTree())
-    assertFalse(connectedNotTree.isTree())
+    assertFalse(notConnectedNotTree.isTree)
+    assertTrue(connectedTree.isTree)
+    assertFalse(connectedNotTree.isTree)
 
   @Test
   def testEnsureTree(): Unit =

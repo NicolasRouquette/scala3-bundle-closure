@@ -30,9 +30,9 @@ class TestComplement:
   def testToAtom(): Unit =
     val caa = "a\u2032"
     val cba = "b\u2032"
-    assertEquals(caa, ca1.toAtom())
-    assertEquals(caa, ca2.toAtom())
-    assertEquals(cba, cb.toAtom())
+    assertEquals(caa, ca1.toAtom)
+    assertEquals(caa, ca2.toAtom)
+    assertEquals(cba, cb.toAtom)
 
   @Test
   def testComplement1(): Unit =

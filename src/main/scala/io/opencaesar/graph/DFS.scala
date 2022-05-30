@@ -33,7 +33,7 @@ object DFS:
      */
     def dfs(): DFS[V] =
       val init = dfsInit(g.vs)
-      dfs(init)
+      dfsInternal(init)
   
     /**
      * dfs starting from a vertex, v
@@ -41,9 +41,10 @@ object DFS:
     def dfs(v: V): DFS[V] =
       require(g.vs.contains(v))
       val init = dfsInit(Set[V](v))
-      dfs(init)
+      dfsInternal(init)
 
-    private def dfs(state: DFS[V]): DFS[V] =
+    @annotation.tailrec
+    private def dfsInternal(state: DFS[V]): DFS[V] =
       require(state.colors.keys.forall(g.vs.contains))
       require(state.topo.forall(t => g.vs.contains(t) && state.colors.getOrElse(t, Color.White) == Color.Black))
       state.colors.find(_._2 == Color.White) match
@@ -53,7 +54,7 @@ object DFS:
         case Some((u, _)) =>
           val update = state.copy(colors = state.colors.updated(u, Color.Gray))
           val next = dfsVisit(u, g.childrenOf(u), update)
-          dfs(next)
+          dfsInternal(next)
 
     private def dfsVisit(u: V, vs: SortedSet[V], s0: DFS[V]): DFS[V] =
       require(g.vs.contains(u))
@@ -105,7 +106,7 @@ object DFS:
 
     /**
      * Taxonomy.directChildrenOf
-     * @see: https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L62
+     * See: https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L62
      */
     def directChildrenOf(v: V): SortedSet[V] =
       require(g.vs.contains(v))
@@ -241,7 +242,7 @@ object DFS:
         t
       }
 
-    def isConnected(): Boolean =
+    def isConnected: Boolean =
       val r = g.roots()
       r.size == 1
 
@@ -250,7 +251,7 @@ object DFS:
       if  r.size > 1 then
         throw UnconnectedTaxonomyException(s"A single connected graph should have only one root vertex instead of ${r.size}.")
 
-    def isTree(): Boolean =
+    def isTree: Boolean =
       val r = g.roots()
       r.size match
         case 1 =>

@@ -117,12 +117,12 @@ class TestDifference:
 
   @Test
   def testToString(): Unit =
-    assertEquals("a\\a", a1ma2.toString())
-    assertEquals("a\\a", a2ma1.toString())
-    assertEquals("a\\b", a1mb.toString())
-    assertEquals("a\\b", a2mb.toString())
-    assertEquals("b\\a", bma1.toString())
-    assertEquals("b\\b", bmb.toString())
+    assertEquals("a\\a", a1ma2.toString)
+    assertEquals("a\\a", a2ma1.toString)
+    assertEquals("a\\b", a1mb.toString)
+    assertEquals("a\\b", a2mb.toString)
+    assertEquals("b\\a", bma1.toString)
+    assertEquals("b\\b", bmb.toString)
 
   @Test
   def testComplement(): Unit =
@@ -161,9 +161,9 @@ class TestDifference:
 
   @Test 
   def testToAtom(): Unit =
-    assertEquals("(a\\a)", a1ma2.toAtom())
-    assertEquals("(a\\a)", a2ma1.toAtom())
-    assertEquals("(a\\b)", a1mb.toAtom())
-    assertEquals("(a\\b)", a2mb.toAtom())
-    assertEquals("(b\\a)", bma1.toAtom())
-    assertEquals("(b\\b)", bmb.toAtom())
+    assertEquals("(a\\a)", a1ma2.toAtom)
+    assertEquals("(a\\a)", a2ma1.toAtom)
+    assertEquals("(a\\b)", a1mb.toAtom)
+    assertEquals("(a\\b)", a2mb.toAtom)
+    assertEquals("(b\\a)", bma1.toAtom)
+    assertEquals("(b\\b)", bmb.toAtom)

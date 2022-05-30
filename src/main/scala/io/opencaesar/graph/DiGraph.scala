@@ -9,7 +9,6 @@ import scala.collection.immutable.{SortedMap,SortedSet}
  * @param es edges (ordered pair of nodes)
  * @param inNeighbors incoming neighbors of a node: u is inNeighbors(v) iff (u,v) is in es
  * @param outNeighbors outgoing neighbors of a node: v is outNeighbors(u) iff (u,v) is in es
- * @param ordering given ordering of the type of nodes, V
  * @tparam V type of graph nodes
  */
 case class DiGraph[V : Ordering]
@@ -17,8 +16,8 @@ case class DiGraph[V : Ordering]
  es: SortedSet[(V, V)],
  inNeighbors: SortedMap[V, SortedSet[V]],
  outNeighbors: SortedMap[V, SortedSet[V]]):
-    require(DiGraph.hasAllVertices(vs, es.map(_._1).toSet))
-    require(DiGraph.hasAllVertices(vs, es.map(_._2).toSet))
+    require(DiGraph.hasAllVertices(vs, es.map(_._1)))
+    require(DiGraph.hasAllVertices(vs, es.map(_._2)))
     require(DiGraph.hasAllVertices(vs, inNeighbors.keySet))
     require(inNeighbors.values.forall(DiGraph.hasAllVertices(vs, _)))
     require(DiGraph.hasAllVertices(vs, outNeighbors.keySet))

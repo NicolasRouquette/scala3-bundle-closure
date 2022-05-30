@@ -7,8 +7,7 @@ sealed trait ClassExpressionSetAxiom[O : Ordering] extends Ordered[ClassExpressi
   val set: SortedSet[ClassExpression[O]]
 
   def toString(kind: String): String =
-    // TODO: why is .toSeq necessary?
-    set.toSeq.mkString(kind + "(", ", ", ")")
+    set.mkString(kind + "(", ", ", ")")
 
   def compare(other: SortedSet[ClassExpression[O]]): Int =
     (set.headOption, other.headOption) match
@@ -25,7 +24,7 @@ case class DisjointClassesAxiom[O : Ordering]
 (override val set: SortedSet[ClassExpression[O]]) 
 extends ClassExpressionSetAxiom[O]:
 
-  override def toString(): String = toString("DisjointClasses")
+  override def toString: String = toString("DisjointClasses")
 
   override def compare(that: ClassExpressionSetAxiom[O]): Int =
     that match
@@ -38,7 +37,7 @@ case class EquivalentClassesAxiom[O : Ordering]
 (override val set: SortedSet[ClassExpression[O]]) 
 extends ClassExpressionSetAxiom[O]:
 
-  override def toString(): String = toString("EquivalentClasses")
+  override def toString: String = toString("EquivalentClasses")
 
   override def compare(that: ClassExpressionSetAxiom[O]): Int =
     that match
@@ -53,7 +52,7 @@ case class DisjointUnionAxiom[O : Ordering]
 (override val set: SortedSet[ClassExpression[O]]) 
 extends ClassExpressionSetAxiom[O]:
 
-  override def toString(): String = toString("DisjointUnion")
+  override def toString: String = toString("DisjointUnion")
 
   override def compare(that: ClassExpressionSetAxiom[O]): Int =
     that match

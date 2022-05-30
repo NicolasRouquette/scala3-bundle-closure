@@ -1,6 +1,7 @@
 package io.opencaesar.graph
 
-import scala.collection.immutable._
+import scala.annotation.tailrec
+import scala.collection.immutable.*
 
 extension[V : Ordering](g: DiGraph[V])
 
@@ -18,11 +19,13 @@ extension[V : Ordering](g: DiGraph[V])
    * @return a map(u, vs) such that all v in vs are reachable from u via edges in g.
    */
   def ri(): SortedMap[V, SortedSet[V]] =
+    // Note: toSet conversions necessary to avoid needing an Ordering[(V, ...)]
     val colors: SortedMap[V, Color] = SortedMap.empty[V, Color] ++ g.vs.toSet.map(v => v -> Color.White)
     val index = SortedMap.empty[V, SortedSet[V]] ++ 
       g.vs.toSet.map(v => v -> ri(g.childrenOf(v), colors.updated(v, Color.Gray), SortedSet.empty[V]))
     index
 
+  @annotation.tailrec
   private def ri(vs: SortedSet[V], colors: SortedMap[V, Color], acc: SortedSet[V]): SortedSet[V] =
     if vs.isEmpty then
       acc

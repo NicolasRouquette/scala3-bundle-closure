@@ -21,7 +21,7 @@ class TestAxiom:
   val ciaubmd = ClassExpression.Difference[String](ciaub, d)
   val buaicmd = ClassExpression.Difference[String](buaic, d)
 
-  val djca1a = DisjointClassesAxiom[String](SortedSet.empty[ClassExpression[String]] + aub + ciaub)
+  val djca1a = DisjointClassesAxiom[String](SortedSet.empty[ClassExpression[String]] + ciaub + aub)
   val djca1b = DisjointClassesAxiom[String](SortedSet.empty[ClassExpression[String]] + bua + buaic)
   val djca2a = DisjointClassesAxiom[String](SortedSet.empty[ClassExpression[String]] + aub + ciaub + ciaubmd + e)
   val djca2b = DisjointClassesAxiom[String](SortedSet.empty[ClassExpression[String]] + bua + buaic + buaicmd + e)
@@ -140,22 +140,3 @@ class TestAxiom:
     Assert.assertNotEquals(eqca2b, djua1b)
     Assert.assertNotEquals(eqca2b, djua2a)
     Assert.assertNotEquals(eqca2b, djua2b)
-
-  @Test
-  def testToString(): Unit =
-    // TODO: Why is .toSeq necessary?
-    
-    Assert.assertEquals("djca1a", "DisjointClasses(" + djca1a.set.toSeq.map(_.toString()).mkString(", ") + ")", djca1a.toString())
-    Assert.assertEquals("djca1b", "DisjointClasses(" + djca1b.set.toSeq.map(_.toString()).mkString(", ") + ")", djca1b.toString())
-    Assert.assertEquals("djca2a", "DisjointClasses(" + djca2a.set.toSeq.map(_.toString()).mkString(", ") +  ")", djca2a.toString())
-    Assert.assertEquals("djca2b", "DisjointClasses(" + djca2b.set.toSeq.map(_.toString()).mkString(", ") +  ")", djca2b.toString())
-
-    Assert.assertEquals("eqca1a", "EquivalentClasses(" + eqca1a.set.toSeq.map(_.toString()).mkString(", ") + ")", eqca1a.toString())
-    Assert.assertEquals("eqca1b", "EquivalentClasses(" + eqca1b.set.toSeq.map(_.toString()).mkString(", ") + ")", eqca1b.toString())
-    Assert.assertEquals("eqca2a", "EquivalentClasses(" + eqca2a.set.toSeq.map(_.toString()).mkString(", ") + ")", eqca2a.toString())
-    Assert.assertEquals("eqca2b", "EquivalentClasses(" + eqca2b.set.toSeq.map(_.toString()).mkString(", ") + ")", eqca2b.toString())
-
-    Assert.assertEquals("djua1a", "DisjointUnion(" + djua1a.set.toSeq.map(_.toString()).mkString(", ") + ")", djua1a.toString())
-    Assert.assertEquals("djua1b", "DisjointUnion(" + djua1b.set.toSeq.map(_.toString()).mkString(", ") + ")", djua1b.toString())
-    Assert.assertEquals("djua2a", "DisjointUnion(" + djua2a.set.toSeq.map(_.toString()).mkString(", ") + ")", djua2a.toString())
-    Assert.assertEquals("djua2b", "DisjointUnion(" + djua2b.set.toSeq.map(_.toString()).mkString(", ") + ")", djua2b.toString())
