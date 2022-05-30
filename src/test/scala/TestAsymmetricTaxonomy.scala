@@ -214,7 +214,8 @@ class TestAsymmetricTaxonomy:
 
   val afterTreeifyTaxonomy = taxonomyFromEdgeList(afterTreeifyEdgeSpec)
 
-  val siblingMap = SortedMap.empty[ClassExpression[String], SortedSet[ClassExpression[String]]] +
+  val siblingMap: SortedMap[ClassExpression[String], SortedSet[ClassExpression[String]]] =
+    SortedMap.empty[ClassExpression[String], SortedSet[ClassExpression[String]]] +
     (string2ClassExpression("a") -> (SortedSet.empty ++ List("b", "c\\(i∪k)").map(string2ClassExpression))) +
     (string2ClassExpression("b") -> (SortedSet.empty ++ List("d", "e\\i", "i\\k", "k").map(string2ClassExpression))) +
     (string2ClassExpression("c\\(i∪k)") -> (SortedSet.empty ++ List("f\\k", "g").map(string2ClassExpression)))
@@ -226,7 +227,7 @@ class TestAsymmetricTaxonomy:
     siblingMap.map {
       case (Singleton(s), cs) =>
         DisjointUnionAxiom(SortedSet.empty ++ cs + Singleton(s))
-      case (_, cs) =>
+      case (_, cs: SortedSet[ClassExpression[String]]) =>
         DisjointClassesAxiom(cs)
     }
 

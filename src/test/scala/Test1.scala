@@ -16,7 +16,7 @@ class Test1:
       .addVertex("y")
       .addVertex("z")
     
-    assertEquals(g1.vs.size, 6)
+    assertEquals(6, g1.vs.size)
     
     val g2 = g1
       .addEdge("u", "v")
@@ -28,7 +28,7 @@ class Test1:
       .addEdge("w", "z")
       .addEdge("z", "z")
     
-    assertEquals(g2.es.size, 8)
+    assertEquals(8, g2.es.size)
 
     import DFS.dfs
 

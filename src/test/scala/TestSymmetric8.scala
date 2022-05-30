@@ -1,4 +1,5 @@
 import io.opencaesar.graph.*
+import io.opencaesar.graph.Axiom.*
 import io.opencaesar.graph.ClassExpression.*
 import io.opencaesar.graph.DFS.*
 
@@ -40,6 +41,12 @@ class TestSymmetric8:
       .addEdge(ch, fh)
       .addEdge(ch, g)
 
+  val expectedDax: Set[ClassExpressionSetAxiom[String]] =
+    Set.empty +
+      DisjointClassesAxiom(SortedSet.empty + bh + ch + h) +
+      DisjointClassesAxiom(SortedSet.empty + d + eh) +
+      DisjointClassesAxiom(SortedSet.empty + fh + g)
+
   @Test def test(): Unit =
     val g1: DiGraph[ClassExpression[String]] =
       DiGraph.empty
@@ -61,4 +68,7 @@ class TestSymmetric8:
         .addEdge(f, h)
 
     val g2 = g1.treeify()
-    assertEquals(g2, expected)
+    assertEquals(expected, g2)
+
+    val dax = g2.generateClosureAxioms(Axiom.DISJOINT_CLASSES)
+    assertEquals(expectedDax, dax)

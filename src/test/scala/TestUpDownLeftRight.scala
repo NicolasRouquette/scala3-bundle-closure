@@ -1,4 +1,5 @@
 import io.opencaesar.graph.*
+import io.opencaesar.graph.Axiom.*
 import io.opencaesar.graph.ClassExpression.*
 import io.opencaesar.graph.DFS.*
 
@@ -18,16 +19,25 @@ class TestUpDownLeftRight:
   val dl = Singleton("dl")
   val dr = Singleton("dr")
 
+  val diff_u = Difference(u, Union(SortedSet.empty[ClassExpression[String]] + ul + ur))
+  val diff_d = Difference(d, Union(SortedSet.empty[ClassExpression[String]] + dl + dr))
+  val diff_l = Difference(l, Union(SortedSet.empty[ClassExpression[String]] + ul + dl))
+  val diff_r = Difference(r, Union(SortedSet.empty[ClassExpression[String]] + ur + dr))
+
   val expected: DiGraph[ClassExpression[String]] =
     DiGraph.empty
       .addEdge(t, ul)
       .addEdge(t, ur)
       .addEdge(t, dl)
       .addEdge(t, dr)
-      .addEdge(t, Difference(u, Union(SortedSet.empty[ClassExpression[String]] + ul + ur)))
-      .addEdge(t, Difference(d, Union(SortedSet.empty[ClassExpression[String]] + dl + dr)))
-      .addEdge(t, Difference(l, Union(SortedSet.empty[ClassExpression[String]] + ul + dl)))
-      .addEdge(t, Difference(r, Union(SortedSet.empty[ClassExpression[String]] + ur + dr)))
+      .addEdge(t, diff_u)
+      .addEdge(t, diff_d)
+      .addEdge(t, diff_l)
+      .addEdge(t, diff_r)
+
+  val expectedDax: Set[ClassExpressionSetAxiom[String]] =
+    Set.empty +
+      DisjointClassesAxiom(SortedSet.empty + ul + ur + dl + dr + diff_u + diff_d + diff_l + diff_r)
 
   @Test def test(): Unit =
     val g1: DiGraph[ClassExpression[String]] =
@@ -46,4 +56,7 @@ class TestUpDownLeftRight:
         .addEdge(r, dr)
 
     val g2 = g1.treeify()
-    assertEquals(g2, expected)
+    assertEquals(expected, g2)
+
+    val dax = g2.generateClosureAxioms(Axiom.DISJOINT_CLASSES)
+    assertEquals(expectedDax, dax)
