@@ -1,4 +1,4 @@
-val dottyVersion = "3.1.2"
+val dottyVersion = "3.1.3"
 
 ThisBuild / scalaVersion := dottyVersion
 
@@ -11,6 +11,7 @@ lazy val root = (project in file("."))
     
     Compile / scalacOptions :=
       Seq(
+          "-deprecation",
           "-feature",
           "-unchecked",
           "-language:implicitConversions",

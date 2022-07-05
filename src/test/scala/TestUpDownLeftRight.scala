@@ -37,7 +37,7 @@ class TestUpDownLeftRight:
 
   val expectedDax: Set[ClassExpressionSetAxiom[String]] =
     Set.empty +
-      DisjointClassesAxiom(SortedSet.empty + ul + ur + dl + dr + diff_u + diff_d + diff_l + diff_r)
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + ul + ur + dl + dr + diff_u + diff_d + diff_l + diff_r)
 
   @Test def test(): Unit =
     val g1: DiGraph[ClassExpression[String]] =

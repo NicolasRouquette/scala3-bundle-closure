@@ -43,9 +43,9 @@ class TestSymmetric8:
 
   val expectedDax: Set[ClassExpressionSetAxiom[String]] =
     Set.empty +
-      DisjointClassesAxiom(SortedSet.empty + bh + ch + h) +
-      DisjointClassesAxiom(SortedSet.empty + d + eh) +
-      DisjointClassesAxiom(SortedSet.empty + fh + g)
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + bh + ch + h) +
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + d + eh) +
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + fh + g)
 
   @Test def test(): Unit =
     val g1: DiGraph[ClassExpression[String]] =

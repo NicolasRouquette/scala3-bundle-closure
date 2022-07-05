@@ -46,10 +46,10 @@ class TestAntiSymmetric:
       .addEdge(ci, g)
 
   val expectedDax: Set[ClassExpressionSetAxiom[String]] =
-    Set.empty +
-      DisjointClassesAxiom(SortedSet.empty + b + ci) +
-      DisjointClassesAxiom(SortedSet.empty + d + ei + i) +
-      DisjointClassesAxiom(SortedSet.empty + f + g)
+    Set.empty[ClassExpressionSetAxiom[String]] +
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + b + ci) +
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + d + ei + i) +
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + f + g)
 
   @Test def test(): Unit =
     val g1: DiGraph[ClassExpression[String]] =

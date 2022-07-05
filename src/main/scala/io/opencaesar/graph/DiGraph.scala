@@ -23,6 +23,8 @@ case class DiGraph[V : Ordering]
     require(DiGraph.hasAllVertices(vs, outNeighbors.keySet))
     require(outNeighbors.values.forall(DiGraph.hasAllVertices(vs, _)))
 
+    val isEmpty: Boolean = vs.isEmpty && es.isEmpty
+
     /**
      * Add a node to the graph
      * @param v node

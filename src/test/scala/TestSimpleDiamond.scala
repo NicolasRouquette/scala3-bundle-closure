@@ -29,11 +29,11 @@ class TestSimpleDiamond:
 
   val expectedDax: Set[ClassExpressionSetAxiom[String]] =
     Set.empty +
-      DisjointClassesAxiom(SortedSet.empty + bd + cd + d)
+      DisjointClassesAxiom(SortedSet.empty[ClassExpression[String]] + bd + cd + d)
 
   val expectedUax: Set[ClassExpressionSetAxiom[String]] =
     Set.empty +
-      DisjointUnionAxiom(SortedSet.empty + bd + cd + d + a)
+      DisjointUnionAxiom(SortedSet.empty[ClassExpression[String]] + bd + cd + d + a)
 
   @Test def test(): Unit =
     val g1: DiGraph[ClassExpression[String]] =

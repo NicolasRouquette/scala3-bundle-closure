@@ -71,7 +71,7 @@ class TestDifference:
     assertEquals(a2mb, sa2.difference(sb));
     assertEquals(bma1, sb.difference(sa1));
     // Theorem 8
-    val d = Difference(sa1, Union(SortedSet.empty + bma1 + bmc))
+    val d = Difference(sa1, Union(SortedSet.empty[ClassExpression[String]] + bma1 + bmc))
     assertEquals(d, sa1.difference(bma1).difference(bmc))
     assertEquals(d, sa1.difference(bmc).difference(bma1))
     // Theorem 11
@@ -137,7 +137,7 @@ class TestDifference:
 
   @Test
   def testIntersection(): Unit =
-    val i = Intersection(SortedSet.empty + a1ma2 + a1mb)
+    val i = Intersection(SortedSet.empty[ClassExpression[String]] + a1ma2 + a1mb)
     assertEquals(i, a1ma2.intersection(a1mb))
     assertEquals(i, a1mb.intersection(a1ma2))
     // Theorem 2
@@ -149,7 +149,7 @@ class TestDifference:
 
   @Test
   def testUnion(): Unit =
-    val u = Union(SortedSet.empty + a1ma2 + a1mb)
+    val u = Union(SortedSet.empty[ClassExpression[String]] + a1ma2 + a1mb)
     assertEquals(u, a1ma2.union(a1mb))
     assertEquals(u, a1mb.union(a1ma2))
     // Theorem 5

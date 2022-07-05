@@ -63,7 +63,7 @@ class TestComplement:
     assertEquals(amb, ca1.difference(cb))
     assertEquals(bma, cb.difference(ca1))
     // Theorem 8
-    val u = Union(SortedSet.empty + cb + cc)
+    val u = Union(SortedSet.empty[ClassExpression[String]] + cb + cc)
     assertEquals(ca1.difference(u), ca1.difference(cb).difference(cc))
     assertEquals(ca1.difference(u), ca1.difference(cc).difference(cb))
     // Theorem 11
@@ -75,7 +75,7 @@ class TestComplement:
 
   @Test
   def testIntersection(): Unit =
-    val i = Intersection(SortedSet.empty + ca1 + cb)
+    val i = Intersection(SortedSet.empty[ClassExpression[String]] + ca1 + cb)
     assertEquals(i, ca1.intersection(cb))
     assertEquals(i, cb.intersection(ca1))
     // Theorem 2
@@ -87,7 +87,7 @@ class TestComplement:
 
   @Test
   def testUnion(): Unit =
-    val u = Union(SortedSet.empty + ca1 + cb)
+    val u = Union(SortedSet.empty[ClassExpression[String]] + ca1 + cb)
     assertEquals(u, ca1.union(cb))
     assertEquals(u, cb.union(ca1))
     // Theorem 5

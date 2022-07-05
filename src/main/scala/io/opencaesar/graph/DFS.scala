@@ -1,6 +1,7 @@
 package io.opencaesar.graph
 
-import scala.collection.immutable.{Map,Seq,SortedMap,SortedSet}
+import scala.annotation.unused
+import scala.collection.immutable.{Map, Seq, SortedMap, SortedSet}
 
 case class DFS[V : Ordering](
   time: Int,
@@ -12,16 +13,16 @@ case class DFS[V : Ordering](
 
 object DFS:
 
-  def dfsInit[V : Ordering](vs: Set[V]): DFS[V] =
+  def dfsInit[V](vs: Set[V])(using ordering: Ordering[V]): DFS[V] =
     DFS[V](
       time = 0,
-      d = SortedMap.empty, 
-      f = SortedMap.empty,
-      colors = SortedMap.empty ++ vs.map(v => v -> Color.White),
-      kind = SortedMap.empty,
+      d = SortedMap.empty(ordering),
+      f = SortedMap.empty(ordering),
+      colors = SortedMap.empty(ordering) ++ vs.map(v => v -> Color.White),
+      kind = SortedMap.empty(Ordering.Tuple2(ordering, ordering)),
       topo = Seq.empty)
 
-  extension[V : Ordering](g: DiGraph[V])
+  extension[V](g: DiGraph[V])(using ordering: Ordering[V])
 
     /**
      * Depth-first search for all vertices.
@@ -195,7 +196,7 @@ object DFS:
      * Taxonomy.isolateChildFromOne
      * @see https://github.com/opencaesar/owl-tools/blob/e1d7708d206fa262aeea5d96cbc69366487748b5/owl-close-world/src/main/java/io/opencaesar/closeworld/Taxonomy.java#L232
      */
-    def isolateChildFromOne(child: V, parent: V)(using ops: HasDifference[V]): DiGraph[V] =
+    def isolateChildFromOne(child: V, parent: V)(using @unused ops: HasDifference[V]): DiGraph[V] =
       require(g.vs.contains(child))
       require(g.vs.contains(parent))
       if g.parentsOf(parent).isEmpty then
